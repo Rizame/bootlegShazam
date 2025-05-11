@@ -1,27 +1,15 @@
 #include <iostream>
-#include "include/fft.h"
-#include <cmath>
-
-FFT fft;
-
-
+#include "lib/wavProcessing.h"
 
 int main() {
-    FFT fft;                                         // your wrapper (N = 1024)
-
-    /* build a 1024-sample frame – e.g. a 1 kHz sine at Fs = 44100 */
-    std::vector<float> frame(1024);
-    for (int n = 0; n < 1024; ++n)
-        frame[n] = std::sin(2.0f * M_PI * 1000.0f * n / 44100.0f);
-
-    const fftwf_complex* spectrum = fft.apply_fft_on_window(frame);      // run FFT
-
-    /* print bin index, frequency, magnitude */
-    for (int k = 0; k <= 1024/2; ++k) {
-        float mag = std::hypot(spectrum[k][0], spectrum[k][1]); // |X[k]|
-        std::cout << k << '\t'
-                  << k * 44100.0f / 1024      << " Hz\t"
-                  << mag                      << '\n';
+    std::vector samples = processFile("songs/NeverGonnaGive.wav");
+    std::vector<std::vector<float>> windows = createWindows(samples);
+    std::cout<<"last window: \n";
+    std::vector last = windows[18000];
+    for(int i = 0; i < last.size();i++){
+        std::cout<<last[i]<<", ";
+        if(i % 10 == 0) std::cout<<"\n";
     }
+
     return 0;
 }

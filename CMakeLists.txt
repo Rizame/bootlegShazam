@@ -11,7 +11,9 @@ pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3f)
 
 add_executable(Shazam main.cpp
         source/fft.cpp
-        include/fft.h)
+        include/fft.h
+        source/wavProcessing.cpp
+        lib/wavProcessing.h)
 
 # Link FFTW
 target_link_libraries(Shazam PRIVATE PkgConfig::FFTW)
