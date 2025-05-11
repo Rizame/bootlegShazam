@@ -1,7 +1,6 @@
 #define DR_WAV_IMPLEMENTATION
 #include "wavProcessing.h"
-#define window_size 1024
-#define hop_size 512
+
 
 std::vector<float> processFile(const char *fileName){
     drwav wav;
