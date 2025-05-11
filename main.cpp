@@ -1,8 +1,8 @@
 #include <iostream>
 #include <fftw3.h>
-#include "lib/dr_wav.h"
+#include "lib/wavProcessing.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    processFile("songs/NeverGonnaGive.wav");
     return 0;
 }

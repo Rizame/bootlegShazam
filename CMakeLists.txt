@@ -9,7 +9,9 @@ include_directories(${CMAKE_SOURCE_DIR}/lib)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3)
 
-add_executable(Shazam main.cpp)
+add_executable(Shazam main.cpp
+        source/wavProcessing.cpp
+        lib/wavProcessing.h)
 
 # Link FFTW
 target_link_libraries(Shazam PRIVATE PkgConfig::FFTW)
