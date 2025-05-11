@@ -7,9 +7,11 @@ include_directories(${CMAKE_SOURCE_DIR}/lib)
 
 # locate system packages
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3)
+pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3f)
 
-add_executable(Shazam main.cpp)
+add_executable(Shazam main.cpp
+        source/fft.cpp
+        include/fft.h)
 
 # Link FFTW
 target_link_libraries(Shazam PRIVATE PkgConfig::FFTW)
