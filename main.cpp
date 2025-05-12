@@ -1,9 +1,9 @@
 #include <iostream>
-#include "lib/wavProcessing.h"
+#include "include/wavProcessing.h"
 
 int main() {
-    std::vector samples = processFile("songs/NeverGonnaGive.wav");
-    std::vector<std::vector<float>> spectrogram = createSpectrogram(samples);
+    std::vector samples = wav::processFile("songs/NeverGonnaGive.wav");
+    std::vector<std::vector<float>> spectrogram = wav::createSpectrogram(samples);
     std::cout<<"spectrum: \n";
     std::vector last = spectrogram[18000];
     for(int i = 0; i < last.size();i++){

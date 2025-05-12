@@ -1,8 +1,8 @@
 #define DR_WAV_IMPLEMENTATION
-#include "wavProcessing.h"
+#include "../include/wavProcessing.h"
 
 
-std::vector<float> processFile(const char *fileName){
+std::vector<float> wav::processFile(const char *fileName){
     drwav wav;
     if (!drwav_init_file(&wav, fileName, NULL)) {
         throw std::logic_error("Failed to open WAV file.\n");
@@ -26,7 +26,7 @@ std::vector<float> processFile(const char *fileName){
     return samples;
 }
 
-std::vector<std::vector<float>> createWindows(const std::vector<float>& pcmFrames){
+std::vector<std::vector<float>> wav::createWindows(const std::vector<float>& pcmFrames){
     std::vector<std::vector<float>> windows;
     FFT fftTool;
 
@@ -52,7 +52,7 @@ std::vector<std::vector<float>> createWindows(const std::vector<float>& pcmFrame
     return windows;
 }
 
-std::vector<std::vector<float>> createSpectrogram(const std::vector<float>& pcmFrames){
+std::vector<std::vector<float>> wav::createSpectrogram(const std::vector<float>& pcmFrames){
     FFT customFft;
     std::vector<std::vector<float>> windows = createWindows(pcmFrames);
     std::vector<std::vector<float>> spectrogram(windows.size());
@@ -62,7 +62,7 @@ std::vector<std::vector<float>> createSpectrogram(const std::vector<float>& pcmF
     return spectrogram;
 }
 
-void applyHammingWindow(std::vector<float>& window){
+void wav::applyHammingWindow(std::vector<float>& window){
     int N = window_size;
     for (int i = 0; i < N; ++i) {
         window[i] *= 0.54 - 0.46 * cos(2 * M_PI * i / (N - 1));
