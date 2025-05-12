@@ -18,9 +18,15 @@ FFT::~FFT() {
     fftwf_free(out_);
 }
 
-fftwf_complex *FFT::apply_fft_on_window(const std::vector<float> &window) {
+std::vector<float> FFT::apply_fft_on_window(const std::vector<float> &window) {
     std::memcpy(input_, window.data(), N * sizeof(float));
-
     fftwf_execute(plan_);
-    return out_; // spectrum for this frame
+    std::vector<float> mag(window.size()/2+1);
+
+    //everything crashes on i: 18984408
+    for(int i = 0; i < mag.size();i++){
+        float temp = hypot(out_[i][0], out_[i][1]);
+        mag[i] = temp;
+    }
+    return mag; // spectrum for this frame
 }

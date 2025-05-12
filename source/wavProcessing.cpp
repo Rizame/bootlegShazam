@@ -28,6 +28,7 @@ std::vector<float> processFile(const char *fileName){
 
 std::vector<std::vector<float>> createWindows(const std::vector<float>& pcmFrames){
     std::vector<std::vector<float>> windows;
+    FFT fftTool;
 
     unsigned int totalFrames = pcmFrames.size();
 
@@ -35,10 +36,9 @@ std::vector<std::vector<float>> createWindows(const std::vector<float>& pcmFrame
         std::vector<float> window(pcmFrames.begin() + i, pcmFrames.begin() + i + window_size);
         applyHammingWindow(window);
         windows.push_back(window);
-
     }
 
-    if(totalFrames % window_size != 0){
+    if((totalFrames - window_size) % hop_size != 0){
         int index = totalFrames - (totalFrames % window_size);
         std::vector<float> lastWindow(pcmFrames.begin() + index, pcmFrames.end());
         for(int i = lastWindow.size(); i < window_size; i++){
@@ -50,6 +50,16 @@ std::vector<std::vector<float>> createWindows(const std::vector<float>& pcmFrame
 
 
     return windows;
+}
+
+std::vector<std::vector<float>> createSpectrogram(const std::vector<float>& pcmFrames){
+    FFT customFft;
+    std::vector<std::vector<float>> windows = createWindows(pcmFrames);
+    std::vector<std::vector<float>> spectrogram(windows.size());
+    for(int i = 0; i < windows.size();i++){
+        spectrogram[i] = (customFft.apply_fft_on_window(windows[i]));
+    }
+    return spectrogram;
 }
 
 void applyHammingWindow(std::vector<float>& window){

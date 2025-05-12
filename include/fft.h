@@ -6,6 +6,7 @@
 #define FFT_H
 #include <vector>
 #include <fftw3.h>
+#include <math.h>
 
 #endif //FFT_H
 
@@ -16,7 +17,7 @@ public:
 
     ~FFT();
 
-    fftwf_complex *apply_fft_on_window(const std::vector<float> &window); // copies, executes, returns out_
+    std::vector<float> apply_fft_on_window(const std::vector<float> &window); // copies, executes, returns out_
 private:
     fftwf_plan plan_;
     float *input_;

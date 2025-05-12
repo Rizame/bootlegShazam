@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include "../include/fft.h"
 
 
 #ifndef SHAZAM_WAVPROCESSING_H
@@ -13,6 +14,7 @@
 
 std::vector<float> processFile(const char *fileName);
 std::vector<std::vector<float>> createWindows(const std::vector<float>& pcmFrames);
+std::vector<std::vector<float>> createSpectrogram(const std::vector<float>& pcmFrames);
 void applyHammingWindow(std::vector<float>& window);
 
 #endif //SHAZAM_WAVPROCESSING_H
