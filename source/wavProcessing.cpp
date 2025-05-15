@@ -8,13 +8,10 @@ std::vector<float> wav::processFile(const char *fileName) {
         throw std::logic_error("Failed to open WAV file.\n");
     }
 
-    std::cout << "Channels: " << wav.channels << ", Sample Rate: " << wav.sampleRate << ", Total Frames: " << wav.
-            totalPCMFrameCount << "\n";
+    std::cout << "Channels: " << wav.channels << ", Sample Rate: " << wav.sampleRate << ", Total Frames: " << wav.totalPCMFrameCount << "\n";
 
-    // total samples
     uint64_t totalSamples = wav.totalPCMFrameCount * wav.channels;
     std::vector<float> samples(totalSamples);
-
 
     uint64_t samplesRead = drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
     drwav_uninit(&wav);
@@ -22,10 +19,23 @@ std::vector<float> wav::processFile(const char *fileName) {
     if (samplesRead != wav.totalPCMFrameCount) {
         std::cerr << "Warning: Not all frames read.\n";
     }
-    std::cout << "Total number of samples: " << samples.size() << "\n";
 
-    return samples;
+    std::cout << "Total number of samples before:: " << samples.size() << "\n";
+
+    std::vector<float> reducedSamples;
+    reducedSamples.reserve((samples.size() * 2) / 3);
+
+    for (size_t i = 0; i < samples.size(); ++i) {
+        if ((i % 3) != 2) {
+            reducedSamples.push_back(samples[i]);
+        }
+    }
+
+    std::cout << "Total number of samples after:" << reducedSamples.size() << "\n";
+
+    return reducedSamples;
 }
+
 
 std::vector<std::vector<float> > wav::createWindows(const std::vector<float> &pcmFrames) {
     std::vector<std::vector<float> > windows;
@@ -86,15 +96,27 @@ std::vector<std::vector<float> > wav::createSpectrogram(const std::vector<float>
     std::vector<std::vector<float> > windows = createWindows(pcmFrames);
     std::vector<std::vector<float> > spectrogram(windows.size());
     for (int i = 0; i < windows.size(); i++) {
-        spectrogram[i] = (customFft.apply_fft_on_window(windows[i]));
+        spectrogram[i] = (trimSpectrum(customFft.apply_fft_on_window(windows[i])));
+
     }
+
     return spectrogram;
 }
 
+std::vector<float> wav::trimSpectrum(const std::vector<float> &spectrum) {
+    float i = 0;
+    int index = 0;
+    while(i <= 5000.0f){
+        index++;
+        i += sample_rate*sample_coeff/window_size;
+    }
+    std::vector<float> trimmedSpectrum(spectrum.begin(), spectrum.begin()+index);
+    return trimmedSpectrum;
+}
+
 void wav::applyHammingWindow(std::vector<float> &window) {
-    int N = window_size;
-    for (int i = 0; i < N; ++i) {
-        window[i] *= 0.54 - 0.46 * cos(2 * M_PI * i / (N - 1));
+    for (int i = 0; i < window_size; ++i) {
+        window[i] *= 0.54 - 0.46 * cos(2 * M_PI * i / (window_size - 1));
     }
 }
 

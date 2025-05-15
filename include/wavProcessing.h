@@ -11,6 +11,8 @@
 #ifndef SHAZAM_WAVPROCESSING_H
 #define SHAZAM_WAVPROCESSING_H
 
+#define sample_rate 44100
+#define sample_coeff 0.67f
 #define window_size 1024
 #define hop_size 512
 
@@ -20,6 +22,8 @@ namespace wav {
     std::vector<std::vector<float> > createWindows(const std::vector<float> &pcmFrames);
 
     std::vector<std::vector<float> > createSpectrogram(const std::vector<float> &pcmFrames);
+
+    std::vector<float> trimSpectrum(const std::vector<float> &spectrum);
 
     void applyHammingWindow(std::vector<float> &window);
 
