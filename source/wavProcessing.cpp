@@ -8,7 +8,8 @@ std::vector<float> wav::processFile(const char *fileName) {
         throw std::logic_error("Failed to open WAV file.\n");
     }
 
-    std::cout << "Channels: " << wav.channels << ", Sample Rate: " << wav.sampleRate << ", Total Frames: " << wav.totalPCMFrameCount << "\n";
+    std::cout << "Channels: " << wav.channels << ", Sample Rate: " << wav.sampleRate << ", Total Frames: " << wav.
+            totalPCMFrameCount << "\n";
 
     uint64_t totalSamples = wav.totalPCMFrameCount * wav.channels;
     std::vector<float> samples(totalSamples);
@@ -97,22 +98,49 @@ std::vector<std::vector<float> > wav::createSpectrogram(const std::vector<float>
     std::vector<std::vector<float> > spectrogram(windows.size());
     for (int i = 0; i < windows.size(); i++) {
         spectrogram[i] = (customFft.apply_fft_on_window(windows[i]));
-
     }
 
     return spectrogram;
 }
-//
-//std::vector<float> wav::trimSpectrum(const std::vector<float> &spectrum) {
-//    float i = 0;
-//    int index = 0;
-//    while(i <= 5000.0f){
-//        index++;
-//        i += sample_rate*sample_coeff/window_size;
-//    }
-//    std::vector<float> trimmedSpectrum(spectrum.begin(), spectrum.begin()+index);
-//    return trimmedSpectrum;
-//}
+
+
+std::vector<float> wav::filterPeaks(const std::vector<std::vector<float> > &spectrogram) {
+    std::vector<float> peaks;
+    int ranges[6] = {10, 20, 40, 80, 160, 512};
+
+    for (const auto &spectrum: spectrogram) {
+        float curRangePeak = 0.0f;
+        int curRange = 0;
+        int j = 0;
+        while (j < ranges[5]) {
+            if (j > ranges[curRange]) {
+                peaks.push_back(curRangePeak);
+                curRangePeak = 0.0;
+                curRange++;
+            }
+            if (spectrum[j] > curRangePeak) {
+                curRangePeak = spectrum[j];
+            }
+            j++;
+        }
+        peaks.push_back(curRangePeak);
+    }
+
+    float mean = std::accumulate(peaks.begin(), peaks.end(), 0.0f) / static_cast<float>(peaks.size());
+    std::cout << "Mean: " << mean << "\n";
+    std::cout << "Peaks before: " << peaks.size() << "\n";
+
+    std::erase_if(peaks,
+                  [mean](float v) { return v <= mean; });
+
+    std::cout << "Peaks after: " << peaks.size() << "\n";
+    for (float peak: peaks) {
+        std::cout << peak << "\n";
+    }
+
+    return peaks;
+};
+
 
 void wav::applyHammingWindow(std::vector<float> &window) {
     for (int i = 0; i < window_size; ++i) {
