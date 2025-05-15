@@ -58,9 +58,26 @@ void wav::plotWindow(std::vector<float> &window) {
     matplotlibcpp::show();
 }
 
-void wav::plotSpectrogram(std::vector<std::vector<float> > &spectrogram) {
-    // matplotlibcpp::;
-    // matplotlibcpp::show();
+void wav::plotSpectrogram(std::vector<std::vector<float> > &spec) {
+    const int rows = static_cast<int>(spec.size());
+    const int cols = static_cast<int>(spec[0].size());
+
+    /* 1 · flatten into a single contiguous std::vector<float>  */
+    std::vector<float> img(rows * cols);
+    for (int r = 0; r < rows; ++r)
+        std::copy(spec[r].begin(), spec[r].end(), img.begin() + r * cols);
+
+    matplotlibcpp::imshow(img.data(), rows, cols, /*colors=*/1,
+                          {
+                              {"origin", "lower"},
+                              {"interpolation", "nearest"},
+                              {"aspect", "auto"},
+                              {"cmap", "magma"}
+                          });
+
+    matplotlibcpp::xlabel("Time frame"); // use timeMatrix to build real-world ticks
+    matplotlibcpp::ylabel("Frequency bin"); // if you like — omitted here
+    matplotlibcpp::show();
 }
 
 
@@ -81,5 +98,22 @@ void wav::applyHammingWindow(std::vector<float> &window) {
     }
 }
 
+std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate,
+                                                     float hopSize) {
+    // every item in spectrogram was created from windows that were sliced
+    // with a rate of 44 100Hz, we got 1024 samples from every window
+    // hence to find the timestamp for a corresponding spectrum we use the
+    // sample, sample rate and hop size
+    std::vector timeMatrix(spectrogram);
 
-
+    double hopTime = hopSize / samplingRate;
+    for (int i = 0; i < spectrogram.size(); i++) {
+        std::vector<time_t> window(spectrogram[i].size());
+        auto windowTime = i * hopTime;
+        for (int j = 0; j < spectrogram[i].size(); j++) {
+            double delta_time = j / samplingRate;
+            timeMatrix[i][j] = windowTime + delta_time;
+        }
+    }
+    return timeMatrix;
+}

@@ -5,6 +5,7 @@
 #include <vector>
 #include "fft.h"
 #include "matplotlibcpp.h"
+#include <ctime>
 
 
 #ifndef SHAZAM_WAVPROCESSING_H
@@ -26,7 +27,7 @@ namespace wav {
 
     void plotSpectrogram(std::vector<std::vector<float> > &spectrogram);
 
-    void applyTimestamp(std::vector<std::vector<float> > &spectrogram);
+    std::vector<std::vector<float>> applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate, float hopSize);
 }
 
 
