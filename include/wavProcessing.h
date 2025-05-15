@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include "fft.h"
+#include "matplotlibcpp.h"
 
 
 #ifndef SHAZAM_WAVPROCESSING_H
@@ -20,6 +21,12 @@ namespace wav {
     std::vector<std::vector<float> > createSpectrogram(const std::vector<float> &pcmFrames);
 
     void applyHammingWindow(std::vector<float> &window);
+
+    void plotWindow(std::vector<float> &window);
+
+    void plotSpectrogram(std::vector<std::vector<float> > &spectrogram);
+
+    void applyTimestamp(std::vector<std::vector<float> > &spectrogram);
 }
 
 
