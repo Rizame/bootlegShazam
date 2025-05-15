@@ -23,10 +23,10 @@ std::vector<float> wav::processFile(const char *fileName) {
     std::cout << "Total number of samples before:: " << samples.size() << "\n";
 
     std::vector<float> reducedSamples;
-    reducedSamples.reserve((samples.size() * 2) / 3);
+    reducedSamples.reserve((samples.size() * sample_coeff));
 
     for (size_t i = 0; i < samples.size(); ++i) {
-        if ((i % 3) != 2) {
+        if (i % 4 == 0) {
             reducedSamples.push_back(samples[i]);
         }
     }
@@ -96,23 +96,23 @@ std::vector<std::vector<float> > wav::createSpectrogram(const std::vector<float>
     std::vector<std::vector<float> > windows = createWindows(pcmFrames);
     std::vector<std::vector<float> > spectrogram(windows.size());
     for (int i = 0; i < windows.size(); i++) {
-        spectrogram[i] = (trimSpectrum(customFft.apply_fft_on_window(windows[i])));
+        spectrogram[i] = (customFft.apply_fft_on_window(windows[i]));
 
     }
 
     return spectrogram;
 }
-
-std::vector<float> wav::trimSpectrum(const std::vector<float> &spectrum) {
-    float i = 0;
-    int index = 0;
-    while(i <= 5000.0f){
-        index++;
-        i += sample_rate*sample_coeff/window_size;
-    }
-    std::vector<float> trimmedSpectrum(spectrum.begin(), spectrum.begin()+index);
-    return trimmedSpectrum;
-}
+//
+//std::vector<float> wav::trimSpectrum(const std::vector<float> &spectrum) {
+//    float i = 0;
+//    int index = 0;
+//    while(i <= 5000.0f){
+//        index++;
+//        i += sample_rate*sample_coeff/window_size;
+//    }
+//    std::vector<float> trimmedSpectrum(spectrum.begin(), spectrum.begin()+index);
+//    return trimmedSpectrum;
+//}
 
 void wav::applyHammingWindow(std::vector<float> &window) {
     for (int i = 0; i < window_size; ++i) {

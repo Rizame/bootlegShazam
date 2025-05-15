@@ -7,7 +7,7 @@ int main() {
     std::vector<std::vector<float> > spectrogram = wav::createSpectrogram(samples);
     std::cout << "spectrum: \n";
 
-    auto timeMatrix = wav::applyTimestamp(spectrogram, 44100.0f * 2 / 3, 512.0f);
+    auto timeMatrix = wav::applyTimestamp(spectrogram, 44100.0f * sample_coeff, 512.0f);
     std::cout << timeMatrix.back().back() << "s" << std::endl;
 
     wav::plotSpectrogram(spectrogram);

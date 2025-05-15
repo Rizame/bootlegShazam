@@ -12,7 +12,7 @@
 #define SHAZAM_WAVPROCESSING_H
 
 #define sample_rate 44100
-#define sample_coeff 0.67f
+#define sample_coeff 0.25f
 #define window_size 1024
 #define hop_size 512
 
