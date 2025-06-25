@@ -104,39 +104,46 @@ std::vector<std::vector<float> > wav::createSpectrogram(const std::vector<float>
 }
 
 
-std::vector<float> wav::filterPeaks(const std::vector<std::vector<float> > &spectrogram) {
-    std::vector<float> peaks;
+std::vector<wav::Peak> wav::filterPeaks(const std::vector<std::vector<float> > &spectrogram) {
+    std::vector<Peak> peaks;
+    double hopTime = hop_size / (sample_rate * sample_coeff);
     int ranges[6] = {10, 20, 40, 80, 160, 512};
+    // TODO check if we need to know which peak belongs to specific window
 
-    for (const auto &spectrum: spectrogram) {
-        float curRangePeak = 0.0f;
+    for (int i = 0; i < spectrogram.size(); i++) {
+        Peak curRangePeak = {0.0f, 0, 0.0f};
         int curRange = 0;
         int j = 0;
         while (j < ranges[5]) {
             if (j > ranges[curRange]) {
                 peaks.push_back(curRangePeak);
-                curRangePeak = 0.0;
+                curRangePeak = {0, 0, 0.0};
                 curRange++;
             }
-            if (spectrum[j] > curRangePeak) {
-                curRangePeak = spectrum[j];
+            if (spectrogram[i][j] > curRangePeak.mag) {
+                curRangePeak = {static_cast<float>((i + 1) * hopTime), j, spectrogram[i][j]};
             }
             j++;
         }
         peaks.push_back(curRangePeak);
     }
 
-    float mean = std::accumulate(peaks.begin(), peaks.end(), 0.0f) / static_cast<float>(peaks.size());
+    float sum = std::accumulate(peaks.begin(), peaks.end(), 0.0f,
+                                [](float acc, const Peak p) { return acc + p.mag; });
+    float mean = sum / static_cast<float>(peaks.size());
     std::cout << "Mean: " << mean << "\n";
     std::cout << "Peaks before: " << peaks.size() << "\n";
 
     std::erase_if(peaks,
-                  [mean](float v) { return v <= mean; });
+                  [mean](Peak v) { return v.mag <= mean; });
 
     std::cout << "Peaks after: " << peaks.size() << "\n";
-    for (float peak: peaks) {
-        std::cout << peak << "\n";
-    }
+
+    // for (int i = 0; i < peaks.size(); i++) {
+    //     std::cout << "Time: " << peaks[i].time << "\n";
+    //     std::cout << "Bin: " << peaks[i].bin << "\n";
+    //     std::cout << "Mag: " << peaks[i].mag << "\n";
+    // }
 
     return peaks;
 };

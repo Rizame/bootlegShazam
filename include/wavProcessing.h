@@ -18,13 +18,15 @@
 #define hop_size 512
 
 namespace wav {
+    struct Peak;
+
     std::vector<float> processFile(const char *fileName);
 
     std::vector<std::vector<float> > createWindows(const std::vector<float> &pcmFrames);
 
     std::vector<std::vector<float> > createSpectrogram(const std::vector<float> &pcmFrames);
 
-    std::vector<float> filterPeaks(const std::vector<std::vector<float> > &spectrogram);
+    std::vector<Peak> filterPeaks(const std::vector<std::vector<float> > &spectrogram);
 
     void applyHammingWindow(std::vector<float> &window);
 
@@ -34,6 +36,12 @@ namespace wav {
 
     std::vector<std::vector<float> > applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate,
                                                     float hopSize);
+
+    struct Peak {
+        float time;
+        int bin;
+        float mag;
+    };
 }
 
 
