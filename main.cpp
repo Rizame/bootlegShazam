@@ -12,7 +12,7 @@ int main() {
     auto peaks = wav::filterPeaks(spectrogram);
 
     wav::plotSpectrogram(spectrogram);
-    std::cout <<"\nSize of the trimmed spectrum: "<<spectrogram.back().size();
+    std::cout << "\nSize of the trimmed spectrum: " << spectrogram.back().size();
 
     return 0;
 }
