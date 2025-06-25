@@ -17,6 +17,8 @@ add_executable(Shazam main.cpp
         include/fft.h
         source/wavProcessing.cpp
         include/wavProcessing.h
+        include/db.h
+        source/db.cpp
 )
 
 # Tell the compiler where to look for headers
@@ -26,10 +28,13 @@ target_include_directories(Shazam PRIVATE
         ${Python3_NumPy_INCLUDE_DIRS}               #  ➜ NumPy C-API
 )
 
+add_library(sqlite3 STATIC lib/sqlite3.c)
+
 # Link libraries that pkg-config / CMake found
 target_link_libraries(Shazam PRIVATE
         PkgConfig::FFTW
         Python3::Python
+        sqlite3
 )
 
 # (optional) show what CMake picked up
