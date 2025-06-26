@@ -9,7 +9,7 @@ std::vector<float> wav::processFile(const char *fileName) {
     }
 
     std::cout << "Channels: " << wav.channels << ", Sample Rate: " << wav.sampleRate << ", Total Frames: " << wav.
-            totalPCMFrameCount << "\n";
+            totalPCMFrameCount << std::endl;
 
     uint64_t totalSamples = wav.totalPCMFrameCount * wav.channels;
     std::vector<float> samples(totalSamples);
@@ -21,7 +21,7 @@ std::vector<float> wav::processFile(const char *fileName) {
         std::cerr << "Warning: Not all frames read.\n";
     }
 
-    std::cout << "Total number of samples before:: " << samples.size() << "\n";
+    std::cout << "Total number of samples before:: " << samples.size() << std::endl;
 
     std::vector<float> reducedSamples;
     reducedSamples.reserve((samples.size() * sample_coeff));
@@ -32,7 +32,7 @@ std::vector<float> wav::processFile(const char *fileName) {
         }
     }
 
-    std::cout << "Total number of samples after:" << reducedSamples.size() << "\n";
+    std::cout << "Total number of samples after:" << reducedSamples.size() << std::endl;
 
     return reducedSamples;
 }
@@ -70,8 +70,8 @@ void wav::plotWindow(std::vector<float> &window) {
 }
 
 void wav::plotSpectrogram(std::vector<std::vector<float> > &spec) {
-    const int rows = static_cast<int>(spec.size());
-    const int cols = static_cast<int>(spec[0].size());
+    const int cols = static_cast<int>(spec.size());
+    const int rows = static_cast<int>(spec[0].size());
 
     /* 1 · flatten into a single contiguous std::vector<float>  */
     std::vector<float> img(rows * cols);
@@ -86,8 +86,8 @@ void wav::plotSpectrogram(std::vector<std::vector<float> > &spec) {
                               {"cmap", "magma"}
                           });
 
-    matplotlibcpp::xlabel("Time frame"); // use timeMatrix to build real-world ticks
-    matplotlibcpp::ylabel("Frequency bin"); // if you like — omitted here
+    matplotlibcpp::xlabel("Frequency"); // use timeMatrix to build real-world ticks
+    matplotlibcpp::ylabel("Amplitude"); // if you like — omitted here
     matplotlibcpp::show();
 }
 
@@ -131,19 +131,19 @@ std::vector<wav::Peak> wav::filterPeaks(const std::vector<std::vector<float> > &
     float sum = std::accumulate(peaks.begin(), peaks.end(), 0.0f,
                                 [](float acc, const Peak p) { return acc + p.mag; });
     float mean = sum / static_cast<float>(peaks.size());
-    std::cout << "Mean: " << mean << "\n";
-    std::cout << "Peaks before: " << peaks.size() << "\n";
+    std::cout << "Mean: " << mean << std::endl;
+    std::cout << "Peaks before: " << peaks.size() << std::endl;
 
     std::erase_if(peaks,
                   [mean](Peak v) { return v.mag <= mean; });
 
-    std::cout << "Peaks after: " << peaks.size() << "\n";
+    std::cout << "Peaks after: " << peaks.size() << std::endl;
 
-     for (int i = 0; i < peaks.size(); i++) {
-         std::cout << "Time: " << peaks[i].time << "\n";
-         std::cout << "Bin: " << peaks[i].bin << "\n";
-         std::cout << "Mag: " << peaks[i].mag << "\n";
-     }
+    for (int i = 0; i < peaks.size(); i++) {
+        std::cout << "Time: " << peaks[i].time << std::endl;
+        std::cout << "Bin: " << peaks[i].bin << std::endl;
+        std::cout << "Mag: " << peaks[i].mag << std::endl;
+    }
 
     return peaks;
 };
@@ -155,12 +155,12 @@ void wav::applyHammingWindow(std::vector<float> &window) {
     }
 }
 
+/* Every item in spectrogram was created from windows that were sliced
+ with a rate of 44 100Hz, we got 1024 samples from every window
+ hence to find the timestamp for a corresponding spectrum we use the
+ sample, sample rate and hop size */
 std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate,
                                                      float hopSize) {
-    // every item in spectrogram was created from windows that were sliced
-    // with a rate of 44 100Hz, we got 1024 samples from every window
-    // hence to find the timestamp for a corresponding spectrum we use the
-    // sample, sample rate and hop size
     std::vector timeMatrix(spectrogram);
 
     double hopTime = hopSize / samplingRate;
@@ -175,20 +175,27 @@ std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<flo
     return timeMatrix;
 }
 
+/*Function that calls hashing on every anchor point and  */
 void wav::createFingerPrint(std::vector<Peak> &peaks) {
     int TARGET_ZONE_SIZE = 4;
-    sqlite3_db db("example.db");
-    Peak anchor{0,0,0};
-    for(int i = 0; i < peaks.size();i++){
+    sqlite3_db db("store.db");
+    db.db_create();
+    // db.drop_db(2);
+
+    Peak anchor{0, 0, 0};
+    for (int i = 0; i < peaks.size() - TARGET_ZONE_SIZE; i++) {
         anchor = peaks[i];
-        for(int j = 0; j < TARGET_ZONE_SIZE; j++){
-            if(i+j >= peaks.size())
+        for (int j = 1; j <= TARGET_ZONE_SIZE; j++) {
+            if (i + j >= peaks.size())
                 break;
 
-            float d_time = anchor.time - peaks[i+j].time;
-            uint32_t hash = encoding::encode(anchor.bin, peaks[i+j].bin, d_time);
-             db.db_insert_hash(hash);
+            float d_time = anchor.time - peaks[i + j].time;
+            uint32_t hash = encoding::encode(anchor.bin, peaks[i + j].bin, d_time);
+            auto song_id = db.db_insert_song("Never gonna give you up");
+            auto hash_entry = db.db_insert_hash(hash, song_id, anchor.time);
+
+            if (hash_entry == -1)
+                std::cout << "Error inserting" << std::endl;
         }
     }
-
 }

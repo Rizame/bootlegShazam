@@ -10,13 +10,21 @@
 
 class sqlite3_db {
 public:
-    explicit sqlite3_db(const std::string& db_name);
-    int db_insert_hash(uint32_t hash);
+    explicit sqlite3_db(const std::string &db_name);
+
+    int db_insert_hash(uint32_t hash, int song_id, float anchor_time) const;
+
+    int db_insert_song(const std::string &song_name) const;
+
     int db_create();
-        ~sqlite3_db();
+
+    int drop_db(int drop_code);
+
+    ~sqlite3_db();
 
 private:
     sqlite3 *_db{};
+    bool song_exists(const std::string &song_name) const;
 };
 
 
