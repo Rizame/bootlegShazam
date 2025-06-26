@@ -7,7 +7,6 @@
 #include <bitset>
 #include <cstdint>
 
-#include "wavProcessing.h"
 
 namespace encoding {
     inline uint32_t encode(int anchor_bin, int target_bin, float delta_time) {

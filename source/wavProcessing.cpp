@@ -139,11 +139,11 @@ std::vector<wav::Peak> wav::filterPeaks(const std::vector<std::vector<float> > &
 
     std::cout << "Peaks after: " << peaks.size() << "\n";
 
-    // for (int i = 0; i < peaks.size(); i++) {
-    //     std::cout << "Time: " << peaks[i].time << "\n";
-    //     std::cout << "Bin: " << peaks[i].bin << "\n";
-    //     std::cout << "Mag: " << peaks[i].mag << "\n";
-    // }
+     for (int i = 0; i < peaks.size(); i++) {
+         std::cout << "Time: " << peaks[i].time << "\n";
+         std::cout << "Bin: " << peaks[i].bin << "\n";
+         std::cout << "Mag: " << peaks[i].mag << "\n";
+     }
 
     return peaks;
 };
@@ -173,4 +173,22 @@ std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<flo
         }
     }
     return timeMatrix;
+}
+
+void wav::createFingerPrint(std::vector<Peak> &peaks) {
+    int TARGET_ZONE_SIZE = 4;
+    sqlite3_db db("example.db");
+    Peak anchor{0,0,0};
+    for(int i = 0; i < peaks.size();i++){
+        anchor = peaks[i];
+        for(int j = 0; j < TARGET_ZONE_SIZE; j++){
+            if(i+j >= peaks.size())
+                break;
+
+            float d_time = anchor.time - peaks[i+j].time;
+            uint32_t hash = encoding::encode(anchor.bin, peaks[i+j].bin, d_time);
+             db.db_insert_hash(hash);
+        }
+    }
+
 }

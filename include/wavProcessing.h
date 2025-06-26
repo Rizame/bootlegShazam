@@ -4,9 +4,12 @@
 #include <cmath>
 #include <vector>
 #include "fft.h"
+#include "encoding.h"
+#include "db.h"
 #include "matplotlibcpp.h"
 #include <ctime>
 #include <algorithm>
+#include "sqlite3.h"
 
 
 #ifndef SHAZAM_WAVPROCESSING_H
@@ -36,6 +39,8 @@ namespace wav {
 
     std::vector<std::vector<float> > applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate,
                                                     float hopSize);
+
+    void createFingerPrint(std::vector<Peak> &peaks);
 
     struct Peak {
         float time;

@@ -12,6 +12,8 @@ int main() {
 
     auto peaks = wav::filterPeaks(spectrogram);
 
+    wav::createFingerPrint(peaks);
+
     wav::plotSpectrogram(spectrogram);
     std::cout << "\nSize of the trimmed spectrum: " << spectrogram.back().size();
     return 0;
