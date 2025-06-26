@@ -19,6 +19,7 @@ add_executable(Shazam main.cpp
         include/wavProcessing.h
         include/db.h
         source/db.cpp
+        include/encoding.h
 )
 
 # Tell the compiler where to look for headers

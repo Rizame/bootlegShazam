@@ -8,8 +8,6 @@
 #include <fftw3.h>
 #include <math.h>
 
-#endif //FFT_H
-
 
 class FFT {
 public:
@@ -25,3 +23,4 @@ private:
     static constexpr int N = 1024;
     static constexpr int H = 512; // hop
 };
+#endif //FFT_H

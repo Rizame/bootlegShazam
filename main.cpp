@@ -1,6 +1,7 @@
 #include <iostream>
 #include "include/wavProcessing.h"
 #include "matplotlibcpp.h"
+#include "include/encoding.h"
 
 int main() {
     std::vector samples = wav::processFile("songs/NeverGonnaGive.wav");
@@ -13,6 +14,5 @@ int main() {
 
     wav::plotSpectrogram(spectrogram);
     std::cout << "\nSize of the trimmed spectrum: " << spectrogram.back().size();
-
     return 0;
 }
