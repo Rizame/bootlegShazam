@@ -20,35 +20,49 @@ sqlite3_db::~sqlite3_db() {
     sqlite3_close(_db);
 }
 
-bool sqlite3_db::song_exists(const std::string &song_name) const {
+static int callback(void *data, int argc, char **argv, char **azColName) {
+    int i;
+    fprintf(stderr, "%s: ", (const char *) data);
+
+    for (i = 0; i < argc; i++) {
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+
+    printf("\n");
+    return 0;
+}
+
+int sqlite3_db::find_song_id(const std::string &song_name) const {
     const char *sql = "SELECT * FROM SONGS WHERE SONG_NAME = ?;";
     sqlite3_stmt *stmt = nullptr;
 
     if (sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "Could not prepare SELECT: " << sqlite3_errmsg(_db) << std::endl;
-        return false;
+        return -1;
     }
 
     sqlite3_bind_text(stmt, 1, song_name.c_str(), -1, SQLITE_TRANSIENT);
 
     // execute
     auto rc = sqlite3_step(stmt);
+    int id = sqlite3_column_int(stmt, 0);
     sqlite3_finalize(stmt);
 
-    if (rc != SQLITE_ROW) {
-        std::cerr << "The song does not exists: " << sqlite3_errmsg(_db) << std::endl;
-        return false;
+    if (rc == SQLITE_DONE) {
+        std::cerr << "The song does not exist: " << song_name << std::endl;
+        return -1;
     }
 
-    return true;
+    return id;
 }
 
 
 int sqlite3_db::db_insert_song(const std::string &song_name) const {
     // prepare
-    if (song_exists(song_name)) {
-        std::cerr << "Song already exists: " << song_name << std::endl;
-        // TODO do not insert song but give the row!
+    auto song = find_song_id(song_name);
+    if (song != -1) {
+        // std::cerr << "Song already exists: " << song_name << std::endl;
+        return song;
     }
     const char *sql = "INSERT INTO SONGS (SONG_NAME) VALUES (?);";
     sqlite3_stmt *stmt = nullptr;
@@ -71,7 +85,7 @@ int sqlite3_db::db_insert_song(const std::string &song_name) const {
 
     // fetch new ID
     auto newId = sqlite3_last_insert_rowid(_db);
-    std::cout << "Inserted: " << song_name << " with id: " << newId << std::endl;
+    // std::cout << "Inserted: " << song_name << " with id: " << newId << std::endl;
 
     return static_cast<int>(newId);
 }
@@ -88,8 +102,8 @@ int sqlite3_db::db_insert_hash(const uint32_t hash, int song_id, float anchor_ti
     }
 
     sqlite3_bind_int(stmt, 1, static_cast<int>(hash));
-    sqlite3_bind_int(stmt, 1, song_id);
-    sqlite3_bind_double(stmt, 1, anchor_time);
+    sqlite3_bind_int(stmt, 2, song_id);
+    sqlite3_bind_double(stmt, 3, anchor_time);
 
 
     // execute
@@ -97,10 +111,10 @@ int sqlite3_db::db_insert_hash(const uint32_t hash, int song_id, float anchor_ti
     sqlite3_finalize(stmt);
 
     if (rc != SQLITE_DONE) {
-        std::cerr << "Error inserting hash: " << sqlite3_errmsg(_db) << std::endl;
+        // std::cerr << "Error inserting hash: " << sqlite3_errmsg(_db) << std::endl;
         return -1;
     }
-    std::cout << "Inserted hash: " << hash << " anchor time: " << anchor_time << " song id: " << song_id << std::endl;
+    // std::cout << "Inserted hash: " << hash << " anchor time: " << anchor_time << " song id: " << song_id << std::endl;
 
     return 0;
 }

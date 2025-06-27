@@ -14,9 +14,9 @@ namespace encoding {
                                (static_cast<uint32_t>(target_bin) << 14) |
                                static_cast<uint32_t>(delta_time);
 
-        std::bitset<32> test = fingerprint;
+        // std::bitset<32> test = fingerprint;
 
-        std::cout << "fingerprint: " << test << std::endl;
+        // std::cout << "fingerprint: " << test << std::endl;
 
         return fingerprint;
     };

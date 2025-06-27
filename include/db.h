@@ -24,7 +24,7 @@ public:
 
 private:
     sqlite3 *_db{};
-    bool song_exists(const std::string &song_name) const;
+    int find_song_id(const std::string &song_name) const;
 };
 
 
