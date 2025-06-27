@@ -130,11 +130,11 @@ int sqlite3_db::db_process_peaks(std::vector<wav::Peak> &peaks, int &song_id) {
 
     int TARGET_ZONE_SIZE = 4;
     wav::Peak anchor{0, 0, 0};
-    for (int i = 0; i < peaks.size(); i++) {
+    for (int i = 0; i < peaks.size() - TARGET_ZONE_SIZE; i++) {
         anchor = peaks[i];
         for (int j = 1; j <= TARGET_ZONE_SIZE; j++) {
-            if (i + j >= peaks.size())
-                break;
+            // if (i + j >= peaks.size())
+            //     break;
 
             float d_time = std::abs(anchor.time - peaks[i + j].time);
             uint32_t hash = encoding::encode(anchor.bin, peaks[i + j].bin, d_time);

@@ -179,8 +179,8 @@ std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<flo
 /*Function that calls hashing on every anchor point and  */
 void wav::createFingerPrint(std::vector<Peak> &peaks) {
     sqlite3_db db("store.db");
-    // db.drop_db(2);
-    // db.db_create();
+    db.drop_db(2);
+    db.db_create();
     auto song_id = db.db_insert_song("Never gonna give you up");
 
     db.db_process_peaks(peaks, song_id);
