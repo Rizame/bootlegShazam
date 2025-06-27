@@ -1,5 +1,6 @@
 #define DR_WAV_IMPLEMENTATION
 #include "../include/wavProcessing.h"
+#include "../include/db.h"
 
 
 std::vector<float> wav::processFile(const char *fileName) {
@@ -177,25 +178,10 @@ std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<flo
 
 /*Function that calls hashing on every anchor point and  */
 void wav::createFingerPrint(std::vector<Peak> &peaks) {
-    int TARGET_ZONE_SIZE = 4;
     sqlite3_db db("store.db");
-    db.drop_db(2);
-    db.db_create();
+    // db.drop_db(2);
+    // db.db_create();
+    auto song_id = db.db_insert_song("Never gonna give you up");
 
-    Peak anchor{0, 0, 0};
-    for (int i = 0; i < peaks.size() - TARGET_ZONE_SIZE; i++) {
-        anchor = peaks[i];
-        for (int j = 1; j <= TARGET_ZONE_SIZE; j++) {
-            if (i + j >= peaks.size())
-                break;
-
-            float d_time = std::abs(anchor.time - peaks[i + j].time);
-            uint32_t hash = encoding::encode(anchor.bin, peaks[i + j].bin, d_time);
-            auto song_id = db.db_insert_song("Never gonna give you up");
-            auto hash_entry = db.db_insert_hash(hash, song_id, anchor.time);
-
-            // if (hash_entry == -1)
-            //     std::cout << "Error inserting" << std::endl;
-        }
-    }
+    db.db_process_peaks(peaks, song_id);
 }

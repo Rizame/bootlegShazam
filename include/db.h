@@ -7,6 +7,9 @@
 
 #include "sqlite3.h"
 #include <string>
+#include <vector>
+#include "wavProcessing.h"
+
 
 class sqlite3_db {
 public:
@@ -20,10 +23,13 @@ public:
 
     int drop_db(int drop_code);
 
+    int db_process_peaks(std::vector<wav::Peak> &peaks, int &song_id);
+
     ~sqlite3_db();
 
 private:
     sqlite3 *_db{};
+
     int find_song_id(const std::string &song_name) const;
 };
 

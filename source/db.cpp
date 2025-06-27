@@ -20,18 +20,6 @@ sqlite3_db::~sqlite3_db() {
     sqlite3_close(_db);
 }
 
-static int callback(void *data, int argc, char **argv, char **azColName) {
-    int i;
-    fprintf(stderr, "%s: ", (const char *) data);
-
-    for (i = 0; i < argc; i++) {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-
-    printf("\n");
-    return 0;
-}
-
 int sqlite3_db::find_song_id(const std::string &song_name) const {
     const char *sql = "SELECT * FROM SONGS WHERE SONG_NAME = ?;";
     sqlite3_stmt *stmt = nullptr;
@@ -61,7 +49,7 @@ int sqlite3_db::db_insert_song(const std::string &song_name) const {
     // prepare
     auto song = find_song_id(song_name);
     if (song != -1) {
-        // std::cerr << "Song already exists: " << song_name << std::endl;
+        std::cerr << "Song already exists: " << song_name << std::endl;
         return song;
     }
     const char *sql = "INSERT INTO SONGS (SONG_NAME) VALUES (?);";
@@ -85,7 +73,7 @@ int sqlite3_db::db_insert_song(const std::string &song_name) const {
 
     // fetch new ID
     auto newId = sqlite3_last_insert_rowid(_db);
-    // std::cout << "Inserted: " << song_name << " with id: " << newId << std::endl;
+    std::cout << "Inserted: " << song_name << " with id: " << newId << std::endl;
 
     return static_cast<int>(newId);
 }
@@ -111,13 +99,64 @@ int sqlite3_db::db_insert_hash(const uint32_t hash, int song_id, float anchor_ti
     sqlite3_finalize(stmt);
 
     if (rc != SQLITE_DONE) {
-        // std::cerr << "Error inserting hash: " << sqlite3_errmsg(_db) << std::endl;
+        std::cerr << "Error inserting hash: " << sqlite3_errmsg(_db) << std::endl;
         return -1;
     }
-    // std::cout << "Inserted hash: " << hash << " anchor time: " << anchor_time << " song id: " << song_id << std::endl;
+    std::cout << "Inserted hash: " << hash << " anchor time: " << anchor_time << " song id: " << song_id << std::endl;
 
     return 0;
 }
+
+int sqlite3_db::db_process_peaks(std::vector<wav::Peak> &peaks, int &song_id) {
+    char *messageError;
+
+    auto rc = sqlite3_exec(_db, "BEGIN TRANSACTION;", nullptr, nullptr, &messageError);
+
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error begin transaction" << std::endl;
+        sqlite3_free(messageError);
+        return -1;
+    }
+
+    const char *sql = "INSERT INTO FINGERPRINTS (HASH, SONG_ID, ANCHOR_TIME) VALUES (?,?,?);";
+
+    sqlite3_stmt *stmt = nullptr;
+
+    if (sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "Could not prepare INSERT: " << sqlite3_errmsg(_db) << std::endl;
+        return -1;
+    }
+
+
+    int TARGET_ZONE_SIZE = 4;
+    wav::Peak anchor{0, 0, 0};
+    for (int i = 0; i < peaks.size(); i++) {
+        anchor = peaks[i];
+        for (int j = 1; j <= TARGET_ZONE_SIZE; j++) {
+            if (i + j >= peaks.size())
+                break;
+
+            float d_time = std::abs(anchor.time - peaks[i + j].time);
+            uint32_t hash = encoding::encode(anchor.bin, peaks[i + j].bin, d_time);
+
+
+            sqlite3_reset(stmt);
+            sqlite3_bind_int(stmt, 1, static_cast<int>(hash));
+            sqlite3_bind_int(stmt, 2, song_id);
+            sqlite3_bind_double(stmt, 3, anchor.time);
+
+            if (sqlite3_step(stmt) != SQLITE_DONE) {
+                std::cerr << "insert failed: " << sqlite3_errmsg(_db) << std::endl;
+            }
+        }
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_exec(_db, "COMMIT;", nullptr, nullptr, &messageError);
+
+    return 0;
+}
+
 
 int sqlite3_db::drop_db(int drop_code) {
     const char *sql = nullptr;

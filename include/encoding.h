@@ -4,22 +4,13 @@
 
 #ifndef ENCODING_H
 #define ENCODING_H
-#include <bitset>
 #include <cstdint>
-
+constexpr uint32_t ANCHOR_MASK = 0x1FF; // 9 bits
+constexpr uint32_t TARGET_MASK = 0x1FF; // 9 bits
+constexpr uint32_t DELTA_MASK = 0x3FFF; // 14 bits
 
 namespace encoding {
-    inline uint32_t encode(int anchor_bin, int target_bin, float delta_time) {
-        uint32_t fingerprint = (static_cast<uint32_t>(anchor_bin) << 23) |
-                               (static_cast<uint32_t>(target_bin) << 14) |
-                               static_cast<uint32_t>(delta_time);
-
-        // std::bitset<32> test = fingerprint;
-
-        // std::cout << "fingerprint: " << test << std::endl;
-
-        return fingerprint;
-    };
+    uint32_t encode(int anchor_bin, int target_bin, float delta_time);
 }
 
 

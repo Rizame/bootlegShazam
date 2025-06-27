@@ -1,3 +1,6 @@
+#ifndef SHAZAM_WAVPROCESSING_H
+#define SHAZAM_WAVPROCESSING_H
+
 #include "../lib/dr_wav.h"
 #include <string>
 #include <iostream>
@@ -5,15 +8,13 @@
 #include <vector>
 #include "fft.h"
 #include "encoding.h"
-#include "db.h"
 #include "matplotlibcpp.h"
 #include <ctime>
 #include <algorithm>
 #include "sqlite3.h"
 
+class sqlite3_db; // forward declaration
 
-#ifndef SHAZAM_WAVPROCESSING_H
-#define SHAZAM_WAVPROCESSING_H
 
 #define sample_rate 44100
 #define sample_coeff 0.25f
