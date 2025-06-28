@@ -23,7 +23,9 @@ public:
 
     int drop_db(int drop_code);
 
-    int db_process_peaks(std::vector<wav::Peak> &peaks, int &song_id);
+    int db_process_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints, int &song_id);
+
+    int db_match_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints);
 
     ~sqlite3_db();
 

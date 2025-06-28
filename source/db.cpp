@@ -107,7 +107,7 @@ int sqlite3_db::db_insert_hash(const uint32_t hash, int song_id, float anchor_ti
     return 0;
 }
 
-int sqlite3_db::db_process_peaks(std::vector<wav::Peak> &peaks, int &song_id) {
+int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints, int &song_id) {
     char *messageError;
 
     auto rc = sqlite3_exec(_db, "BEGIN TRANSACTION;", nullptr, nullptr, &messageError);
@@ -127,32 +127,30 @@ int sqlite3_db::db_process_peaks(std::vector<wav::Peak> &peaks, int &song_id) {
         return -1;
     }
 
+    for(int i = 0; i < fingerPrints.size();i++){
+        const auto& [hash, a_time] = fingerPrints[i];
+        sqlite3_reset(stmt);
+        sqlite3_bind_int(stmt, 1, static_cast<int>(hash));
+        sqlite3_bind_int(stmt, 2, song_id);
+        sqlite3_bind_double(stmt, 3, a_time);
 
-    int TARGET_ZONE_SIZE = 4;
-    wav::Peak anchor{0, 0, 0};
-    for (int i = 0; i < peaks.size() - TARGET_ZONE_SIZE; i++) {
-        anchor = peaks[i];
-        for (int j = 1; j <= TARGET_ZONE_SIZE; j++) {
-            // if (i + j >= peaks.size())
-            //     break;
-
-            float d_time = std::abs(anchor.time - peaks[i + j].time);
-            uint32_t hash = encoding::encode(anchor.bin, peaks[i + j].bin, d_time);
-
-
-            sqlite3_reset(stmt);
-            sqlite3_bind_int(stmt, 1, static_cast<int>(hash));
-            sqlite3_bind_int(stmt, 2, song_id);
-            sqlite3_bind_double(stmt, 3, anchor.time);
-
-            if (sqlite3_step(stmt) != SQLITE_DONE) {
-                std::cerr << "insert failed: " << sqlite3_errmsg(_db) << std::endl;
-            }
+        if (sqlite3_step(stmt) != SQLITE_DONE) {
+            std::cerr << "insert failed: " << sqlite3_errmsg(_db) << std::endl;
         }
     }
 
+
     sqlite3_finalize(stmt);
     sqlite3_exec(_db, "COMMIT;", nullptr, nullptr, &messageError);
+
+    return 0;
+}
+
+int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints) {
+    std::cout<<"\nmatching following fingerprints: \n"<<std::endl;
+    for(int i = 0; i < fingerPrints.size();i++){
+        std::cout<<fingerPrints[i].first<<std::endl;
+    }
 
     return 0;
 }

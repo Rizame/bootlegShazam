@@ -176,12 +176,39 @@ std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<flo
     return timeMatrix;
 }
 
-/*Function that calls hashing on every anchor point and  */
-void wav::createFingerPrint(std::vector<Peak> &peaks) {
-    sqlite3_db db("store.db");
-    db.drop_db(2);
-    db.db_create();
-    auto song_id = db.db_insert_song("Never gonna give you up");
+std::vector<std::pair<uint32_t, float>> wav::createFingerprints(std::vector<wav::Peak> &peaks) {
+    int TARGET_ZONE_SIZE = 4;
+    std::vector<std::pair<uint32_t, float>> fingerPrints;
 
-    db.db_process_peaks(peaks, song_id);
+    wav::Peak anchor{0, 0, 0};
+    for (int i = 0; i < peaks.size() - TARGET_ZONE_SIZE; i++) {
+        anchor = peaks[i];
+        for (int j = 1; j <= TARGET_ZONE_SIZE; j++) {
+
+            float d_time = std::abs(anchor.time - peaks[i + j].time);
+            uint32_t hash = encoding::encode(anchor.bin, peaks[i + j].bin, d_time);
+
+            fingerPrints.emplace_back(hash, anchor.time);
+        }
+    }
+
+    return fingerPrints;
+}
+
+/*Function that calls hashing on every anchor point and  */
+void wav::processPeaks(std::vector<Peak> &peaks, bool toStore) {
+    sqlite3_db db("store.db");
+    std::vector<std::pair<uint32_t, float>> fingerPrints = createFingerprints(peaks);
+
+    if(toStore){
+        //db.drop_db(2);
+        //db.db_create();
+        auto song_id = db.db_insert_song("Never gonna give you up");
+
+        db.db_process_fingerPrints(fingerPrints, song_id);
+    }
+    else{
+
+        db.db_match_fingerPrints(fingerPrints);
+    }
 }

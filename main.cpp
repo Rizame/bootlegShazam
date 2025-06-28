@@ -12,9 +12,14 @@ int main() {
 
     auto peaks = wav::filterPeaks(spectrogram);
 
-    wav::createFingerPrint(peaks);
+    wav::processPeaks(peaks, true);
 
-    wav::plotSpectrogram(spectrogram);
-    std::cout << "\nSize of the trimmed spectrum: " << spectrogram.back().size();
+    //wav::plotSpectrogram(spectrogram);
+
+    std::vector samplesInput = wav::processFile("songs/TrimmedNever.wav");
+    std::vector<std::vector<float> > spectrogramInput = wav::createSpectrogram(samples);
+    auto peaksInput = wav::filterPeaks(spectrogram);
+    wav::processPeaks(peaksInput, false);
+
     return 0;
 }

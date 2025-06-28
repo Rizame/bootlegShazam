@@ -41,7 +41,9 @@ namespace wav {
     std::vector<std::vector<float> > applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate,
                                                     float hopSize);
 
-    void createFingerPrint(std::vector<Peak> &peaks);
+    void processPeaks(std::vector<Peak> &peaks, bool toStore);
+
+    std::vector<std::pair<uint32_t, float>> createFingerprints(std::vector<wav::Peak> &peaks);
 
     struct Peak {
         float time;
