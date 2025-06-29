@@ -140,12 +140,6 @@ std::vector<wav::Peak> wav::filterPeaks(const std::vector<std::vector<float> > &
 
     std::cout << "Peaks after: " << peaks.size() << std::endl;
 
-    for (int i = 0; i < peaks.size(); i++) {
-        std::cout << "Time: " << peaks[i].time << std::endl;
-        std::cout << "Bin: " << peaks[i].bin << std::endl;
-        std::cout << "Mag: " << peaks[i].mag << std::endl;
-    }
-
     return peaks;
 };
 

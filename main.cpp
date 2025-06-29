@@ -12,13 +12,13 @@ int main() {
 
     auto peaks = wav::filterPeaks(spectrogram);
 
-    wav::processPeaks(peaks, true);
+    //wav::processPeaks(peaks, true);
 
     //wav::plotSpectrogram(spectrogram);
 
     std::vector samplesInput = wav::processFile("songs/TrimmedNever.wav");
-    std::vector<std::vector<float> > spectrogramInput = wav::createSpectrogram(samples);
-    auto peaksInput = wav::filterPeaks(spectrogram);
+    std::vector<std::vector<float> > spectrogramInput = wav::createSpectrogram(samplesInput);
+    auto peaksInput = wav::filterPeaks(spectrogramInput);
     wav::processPeaks(peaksInput, false);
 
     return 0;

@@ -148,9 +148,31 @@ int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float>> 
 
 int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints) {
     std::cout<<"\nmatching following fingerprints: \n"<<std::endl;
-    for(int i = 0; i < fingerPrints.size();i++){
-        std::cout<<fingerPrints[i].first<<std::endl;
+    std::cout<<"\nvery first fingerprint: \n"<<fingerPrints[0].first<<" Total amount: "<<fingerPrints.size()<<std::endl;
+
+
+    const char* sql = "SELECT * FROM FINGERPRINTS WHERE HASH = ?;";
+    sqlite3_stmt* stmt;
+
+    if (sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(_db) << "\n";
+        return 1;
     }
+
+    sqlite3_bind_int(stmt, 1, static_cast<int>(fingerPrints[0].first));
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        int hash = sqlite3_column_int(stmt, 0);
+        int song_id = sqlite3_column_int(stmt, 1);
+        double anchor_time = sqlite3_column_double(stmt, 2);
+
+        std::cout << "Hash: " << hash
+                  << ", Song ID: " << song_id
+                  << ", Anchor Time: " << anchor_time << "\n";
+    }
+
+    sqlite3_finalize(stmt);
+
 
     return 0;
 }
