@@ -148,7 +148,7 @@ int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float>> 
 
 int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints) {
     std::cout<<"\nmatching following fingerprints: \n"<<std::endl;
-    std::cout<<"\nvery first fingerprint: \n"<<fingerPrints[0].first<<" Total amount: "<<fingerPrints.size()<<std::endl;
+    std::cout<<"\nvery first fingerprint: \n"<<fingerPrints[100].first<<" Total amount: "<<fingerPrints.size()<<std::endl;
 
 
     const char* sql = "SELECT * FROM FINGERPRINTS WHERE HASH = ?;";
@@ -159,7 +159,7 @@ int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float>> &f
         return 1;
     }
 
-    sqlite3_bind_int(stmt, 1, static_cast<int>(fingerPrints[0].first));
+    sqlite3_bind_int(stmt, 1, static_cast<int>(fingerPrints[100].first));
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         int hash = sqlite3_column_int(stmt, 0);
