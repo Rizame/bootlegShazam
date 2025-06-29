@@ -107,7 +107,7 @@ int sqlite3_db::db_insert_hash(const uint32_t hash, int song_id, float anchor_ti
     return 0;
 }
 
-int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints, int &song_id) {
+int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float> > &fingerPrints, int &song_id) {
     char *messageError;
 
     auto rc = sqlite3_exec(_db, "BEGIN TRANSACTION;", nullptr, nullptr, &messageError);
@@ -127,8 +127,8 @@ int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float>> 
         return -1;
     }
 
-    for(int i = 0; i < fingerPrints.size();i++){
-        const auto& [hash, a_time] = fingerPrints[i];
+    for (int i = 0; i < fingerPrints.size(); i++) {
+        const auto &[hash, a_time] = fingerPrints[i];
         sqlite3_reset(stmt);
         sqlite3_bind_int(stmt, 1, static_cast<int>(hash));
         sqlite3_bind_int(stmt, 2, song_id);
@@ -146,30 +146,56 @@ int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float>> 
     return 0;
 }
 
-int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints) {
-    std::cout<<"\nmatching following fingerprints: \n"<<std::endl;
-    std::cout<<"\nvery first fingerprint: \n"<<fingerPrints[0].first<<" Total amount: "<<fingerPrints.size()<<std::endl;
+int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float> > &fingerPrints) {
+    // std::cout << "\nmatching following fingerprints: \n" << std::endl;
+    // std::cout << "\nvery first fingerprint: \n" << fingerPrints[0].first << " Total amount: " << fingerPrints.size() <<
+    //         std::endl;
+
+    std::string paramList;
+
+    std::cout << "FINGERPRINTS:" << fingerPrints.size() << std::endl;
+
+    for (int i = 0; i < fingerPrints.size(); i++) {
+        paramList.append("?");
+        if (i != fingerPrints.size() - 1) {
+            paramList.append(", ");
+        }
+    }
 
 
-    const char* sql = "SELECT * FROM FINGERPRINTS WHERE HASH = ?;";
-    sqlite3_stmt* stmt;
+    std::string sql = "SELECT * FROM FINGERPRINTS WHERE HASH IN (" + paramList + ");";
+    sqlite3_stmt *stmt;
 
-    if (sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+    if (sqlite3_prepare_v2(_db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(_db) << "\n";
         return 1;
     }
 
-    sqlite3_bind_int(stmt, 1, static_cast<int>(fingerPrints[0].first));
+    for (int i = 0; i < fingerPrints.size(); i++) {
+        sqlite3_bind_int(stmt, i + 1, static_cast<int>(fingerPrints[i].first));
+    }
+
+    std::vector<std::tuple<int, int, double> > candidates;
+
+    // hash map -> [song] = <vector>{hash, anchor_time}
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         int hash = sqlite3_column_int(stmt, 0);
         int song_id = sqlite3_column_int(stmt, 1);
         double anchor_time = sqlite3_column_double(stmt, 2);
-
-        std::cout << "Hash: " << hash
-                  << ", Song ID: " << song_id
-                  << ", Anchor Time: " << anchor_time << "\n";
+        candidates.emplace_back(hash, song_id, anchor_time);
     }
+
+    std::cout << "Candidates:" << candidates.size() << std::endl;
+
+
+    // for (int i = 0; i < candidates.size(); i++) {
+    //     const auto [hash, song, anchor_time] = candidates[i];
+    //     std::cout
+    //             << "hash: " << hash << ", "
+    //             << "song: " << song << ", "
+    //             << "anchor_time: " << anchor_time << '\n';
+    // }
 
     sqlite3_finalize(stmt);
 
