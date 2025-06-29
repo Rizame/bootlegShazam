@@ -197,7 +197,8 @@ void wav::processPeaks(std::vector<Peak> &peaks, bool toStore) {
     if(toStore){
         //db.drop_db(2);
         //db.db_create();
-        auto song_id = db.db_insert_song("Never gonna give you up");
+       // auto song_id = db.db_insert_song("Never gonna give you up");
+        auto song_id = db.db_insert_song("TogetherForever");
 
         db.db_process_fingerPrints(fingerPrints, song_id);
     }
