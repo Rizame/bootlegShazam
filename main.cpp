@@ -4,15 +4,15 @@
 #include "include/encoding.h"
 
 int main() {
-    std::vector samples = wav::processFile("songs/TogetherForever.wav");
-    std::vector<std::vector<float> > spectrogram = wav::createSpectrogram(samples);
-
-    auto timeMatrix = wav::applyTimestamp(spectrogram, 44100.0f * sample_coeff, 512.0f);
-    std::cout << timeMatrix.back().back() << "s" << std::endl;
-
-    auto peaks = wav::filterPeaks(spectrogram);
-
-    wav::processPeaks(peaks, true);
+    // std::vector samples = wav::processFile("songs/TogetherForever.wav");
+    // std::vector<std::vector<float> > spectrogram = wav::createSpectrogram(samples);
+    //
+    // auto timeMatrix = wav::applyTimestamp(spectrogram, 44100.0f * sample_coeff, 512.0f);
+    // std::cout << timeMatrix.back().back() << "s" << std::endl;
+    //
+    // auto peaks = wav::filterPeaks(spectrogram);
+    //
+    // wav::processPeaks(peaks, true);
 
     //wav::plotSpectrogram(spectrogram);
 
