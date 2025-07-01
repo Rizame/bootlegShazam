@@ -177,7 +177,6 @@ int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float> > &
 
     std::vector<std::tuple<int, int, double> > candidates;
 
-    // hash map -> [song] = <vector>{hash, anchor_time}
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         int hash = sqlite3_column_int(stmt, 0);
@@ -188,14 +187,6 @@ int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float> > &
 
     std::cout << "Candidates:" << candidates.size() << std::endl;
 
-
-    // for (int i = 0; i < candidates.size(); i++) {
-    //     const auto [hash, song, anchor_time] = candidates[i];
-    //     std::cout
-    //             << "hash: " << hash << ", "
-    //             << "song: " << song << ", "
-    //             << "anchor_time: " << anchor_time << '\n';
-    // }
 
     sqlite3_finalize(stmt);
 

@@ -45,6 +45,8 @@ namespace wav {
 
     std::vector<std::pair<uint32_t, float>> createFingerprints(std::vector<wav::Peak> &peaks);
 
+    int scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double>>> &matches, std::vector<std::pair<uint32_t, float>> &clips);
+
     struct Peak {
         float time;
         int bin;

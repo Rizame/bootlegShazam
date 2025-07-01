@@ -1,4 +1,5 @@
 #define DR_WAV_IMPLEMENTATION
+
 #include "../include/wavProcessing.h"
 #include "../include/db.h"
 
@@ -81,10 +82,10 @@ void wav::plotSpectrogram(std::vector<std::vector<float> > &spec) {
 
     matplotlibcpp::imshow(img.data(), rows, cols, /*colors=*/1,
                           {
-                              {"origin", "lower"},
-                              {"interpolation", "nearest"},
-                              {"aspect", "auto"},
-                              {"cmap", "magma"}
+                                  {"origin",        "lower"},
+                                  {"interpolation", "nearest"},
+                                  {"aspect",        "auto"},
+                                  {"cmap",          "magma"}
                           });
 
     matplotlibcpp::xlabel("Frequency"); // use timeMatrix to build real-world ticks
@@ -189,21 +190,54 @@ std::vector<std::pair<uint32_t, float>> wav::createFingerprints(std::vector<wav:
     return fingerPrints;
 }
 
+int wav::scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double>>> &matches,
+                      std::vector<std::pair<uint32_t, float>> &clips) {
+    std::vector<std::pair<int, int>> scores(matches.size());
+    for (const auto &[song_id, data]: matches) {
+        int score = 0;
+        std::pair<int, double> first_match = *data.begin();
+
+        auto first_clip_it = std::find_if(clips.begin(), clips.end(),
+                                          [&](const std::pair<uint32_t, float> &clip) {
+                                              return clip.first == static_cast<uint32_t>(first_match.first);
+                                          });
+
+        std::cout << "Clip value:" << first_clip_it->first << " " << first_clip_it->second << std::endl;
+
+
+
+        for (int i = 0; i < data.size(); i++) {
+            std::pair<int, double> clip = clips[i];
+            //if (d_time < 100) score++;
+        }
+        scores.emplace_back(song_id, score);
+    }
+    auto best = std::max_element(scores.begin(), scores.end(),
+                                 [](const auto &a, const auto &b) {
+                                     return a.second < b.second;
+                                 });
+
+    int best_song_id = best->first;
+    int best_score = best->second;
+
+    return best_song_id;
+}
+
 /*Function that calls hashing on every anchor point and  */
 void wav::processPeaks(std::vector<Peak> &peaks, bool toStore) {
     sqlite3_db db("store.db");
     std::vector<std::pair<uint32_t, float>> fingerPrints = createFingerprints(peaks);
 
-    if(toStore){
+    if (toStore) {
         //db.drop_db(2);
         //db.db_create();
-       // auto song_id = db.db_insert_song("Never gonna give you up");
+        // auto song_id = db.db_insert_song("Never gonna give you up");
         auto song_id = db.db_insert_song("TogetherForever");
 
         db.db_process_fingerPrints(fingerPrints, song_id);
-    }
-    else{
+    } else {
 
-        db.db_match_fingerPrints(fingerPrints);
+        std::unordered_map<int, std::vector<std::pair<int, double>>> matches = db.db_match_fingerPrints(fingerPrints);
+        int result = scoreMatches(matches, fingerPrints);
     }
 }
