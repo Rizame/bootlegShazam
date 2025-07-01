@@ -178,15 +178,25 @@ int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float> > &
     std::vector<std::tuple<int, int, double> > candidates;
 
     // hash map -> [song] = <vector>{hash, anchor_time}
+    std::unordered_map<int, std::vector<std::pair<int, double> > > song_fingerprints;
+
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         int hash = sqlite3_column_int(stmt, 0);
         int song_id = sqlite3_column_int(stmt, 1);
         double anchor_time = sqlite3_column_double(stmt, 2);
-        candidates.emplace_back(hash, song_id, anchor_time);
+        song_fingerprints[song_id].emplace_back(hash, anchor_time);
     }
 
-    std::cout << "Candidates:" << candidates.size() << std::endl;
+
+    for (const auto &[song_id, vec]: song_fingerprints) {
+        for (const auto &[hash, anchor_time]: vec) {
+            std::cout << "SongID: " << song_id
+                    << "  hash: " << hash
+                    << "  db_match_anchor_t: " << anchor_time
+                    << std::endl;
+        }
+    }
 
 
     // for (int i = 0; i < candidates.size(); i++) {
