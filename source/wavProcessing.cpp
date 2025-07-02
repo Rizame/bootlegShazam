@@ -222,22 +222,21 @@ std::pair<int, int> wav::scoreMatches(std::unordered_map<int, std::vector<std::p
 }
 
 /*Function that calls hashing on every anchor point and  */
-void wav::processPeaks(std::vector<Peak> &peaks, bool toStore) {
+void wav::processPeaks(std::vector<Peak> &peaks, bool toStore, std::string songName) {
     sqlite3_db db("store.db");
     auto fingerPrints = createFingerprints(peaks);
 
     if (toStore) {
-        //db.drop_db(2);
-        //db.db_create();
-        // auto song_id = db.db_insert_song("Never gonna give you up");
-        auto song_id = db.db_insert_song("TogetherForever");
+        // db.drop_db(2);
+        // db.db_create();
+        auto song_id = db.db_insert_song(songName);
 
         db.db_process_fingerPrints(fingerPrints, song_id);
     } else {
         std::unordered_map<int, std::vector<std::pair<int, double> > > matches = db.db_match_fingerPrints(fingerPrints);
         auto result = scoreMatches(matches, fingerPrints);
 
-        std::cout << "Offset: " << result.first * 50 / 1000.0 << "s" <<
+        std::cout << "Offset: " << result.first * 50 / (2 * 1000.0) << "s" <<
                 ", Song Id: " << result.second << std::endl;
     }
 }

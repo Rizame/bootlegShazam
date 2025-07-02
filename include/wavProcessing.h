@@ -41,7 +41,7 @@ namespace wav {
     std::vector<std::vector<float> > applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate,
                                                     float hopSize);
 
-    void processPeaks(std::vector<Peak> &peaks, bool toStore);
+    void processPeaks(std::vector<Peak> &peaks, bool toStore, std::string songName);
 
     std::unordered_map<int, std::vector<double> > createFingerprints(std::vector<wav::Peak> &peaks);
 
