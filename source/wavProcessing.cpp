@@ -82,10 +82,10 @@ void wav::plotSpectrogram(std::vector<std::vector<float> > &spec) {
 
     matplotlibcpp::imshow(img.data(), rows, cols, /*colors=*/1,
                           {
-                                  {"origin",        "lower"},
-                                  {"interpolation", "nearest"},
-                                  {"aspect",        "auto"},
-                                  {"cmap",          "magma"}
+                              {"origin", "lower"},
+                              {"interpolation", "nearest"},
+                              {"aspect", "auto"},
+                              {"cmap", "magma"}
                           });
 
     matplotlibcpp::xlabel("Frequency"); // use timeMatrix to build real-world ticks
@@ -171,9 +171,10 @@ std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<flo
     return timeMatrix;
 }
 
-std::vector<std::pair<uint32_t, float> > wav::createFingerprints(std::vector<wav::Peak> &peaks) {
+std::unordered_map<int, std::vector<double> > wav::createFingerprints(std::vector<wav::Peak> &peaks) {
     int TARGET_ZONE_SIZE = 4;
-    std::vector<std::pair<uint32_t, float> > fingerPrints;
+    std::unordered_map<int, std::vector<double> > fingerprints;
+    // TODO check proyob with int and double
 
     wav::Peak anchor{0, 0, 0};
     for (int i = 0; i < peaks.size() - TARGET_ZONE_SIZE; i++) {
@@ -181,51 +182,49 @@ std::vector<std::pair<uint32_t, float> > wav::createFingerprints(std::vector<wav
         for (int j = 1; j <= TARGET_ZONE_SIZE; j++) {
             float d_time = std::abs(anchor.time - peaks[i + j].time);
             uint32_t hash = encoding::encode(anchor.bin, peaks[i + j].bin, d_time);
-
-            fingerPrints.emplace_back(hash, anchor.time);
+            fingerprints[hash].emplace_back(anchor.time);
         }
     }
 
-    return fingerPrints;
+    return fingerprints;
 }
 
-int wav::scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double>>> &matches,
-                      std::vector<std::pair<uint32_t, float>> &clips) {
-    std::vector<std::pair<int, int>> scores(matches.size());
-    for (const auto &[song_id, data]: matches) {
-        int score = 0;
-        std::pair<int, double> first_match = *data.begin();
+/*
+@param matches is of type [song_id] = {hash_x, a_time_x, ...}
+@param clips is of type [hash] = {a_time1, a_time2, ...}
 
-        auto first_clip_it = std::find_if(clips.begin(), clips.end(),
-                                          [&](const std::pair<uint32_t, float> &clip) {
-                                              return clip.first == static_cast<uint32_t>(first_match.first);
-                                          });
-
-        std::cout << "Clip value:" << first_clip_it->first << " " << first_clip_it->second << std::endl;
+@return song_id of the matches song
+ */
+std::pair<int, int> wav::scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double> > > &matches,
+                                      std::unordered_map<int, std::vector<double> > &clips) {
+    std::pair<int, int> topScore; // bin of the offset and song id
+    std::unordered_map<int, int> histogram;
 
 
+    for (const auto &[song_id, hashes]: matches) {
+        for (int i = 0; i < hashes.size(); i++) {
+            auto match_hash_time = hashes[i];
+            auto clip_anchor_times = clips[match_hash_time.first];
 
-        for (int i = 0; i < data.size(); i++) {
-            std::pair<int, double> clip = clips[i];
-            //if (d_time < 100) score++;
+            for (int j = 0; j < clip_anchor_times.size(); j++) {
+                auto offset = clip_anchor_times[j] - match_hash_time.second;
+                int bin = std::round(offset / 0.05);
+                histogram[bin]++;
+                if (histogram[bin] > histogram[topScore.first]) {
+                    topScore.first = bin;
+                    topScore.second = song_id;
+                }
+            }
         }
-        scores.emplace_back(song_id, score);
     }
-    auto best = std::max_element(scores.begin(), scores.end(),
-                                 [](const auto &a, const auto &b) {
-                                     return a.second < b.second;
-                                 });
 
-    int best_song_id = best->first;
-    int best_score = best->second;
-
-    return best_song_id;
+    return topScore;
 }
 
 /*Function that calls hashing on every anchor point and  */
 void wav::processPeaks(std::vector<Peak> &peaks, bool toStore) {
     sqlite3_db db("store.db");
-    std::vector<std::pair<uint32_t, float> > fingerPrints = createFingerprints(peaks);
+    auto fingerPrints = createFingerprints(peaks);
 
     if (toStore) {
         //db.drop_db(2);
@@ -235,8 +234,10 @@ void wav::processPeaks(std::vector<Peak> &peaks, bool toStore) {
 
         db.db_process_fingerPrints(fingerPrints, song_id);
     } else {
+        std::unordered_map<int, std::vector<std::pair<int, double> > > matches = db.db_match_fingerPrints(fingerPrints);
+        auto result = scoreMatches(matches, fingerPrints);
 
-        std::unordered_map<int, std::vector<std::pair<int, double>>> matches = db.db_match_fingerPrints(fingerPrints);
-        int result = scoreMatches(matches, fingerPrints);
+        std::cout << "Offset: " << result.first * 50 / 1000.0 << "s" <<
+                ", Song Id: " << result.second << std::endl;
     }
 }

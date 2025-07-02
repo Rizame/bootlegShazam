@@ -107,7 +107,7 @@ int sqlite3_db::db_insert_hash(const uint32_t hash, int song_id, float anchor_ti
     return 0;
 }
 
-int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float> > &fingerPrints, int &song_id) {
+int sqlite3_db::db_process_fingerPrints(std::unordered_map<int, std::vector<double> > &fingerprints, int &song_id) {
     char *messageError;
 
     auto rc = sqlite3_exec(_db, "BEGIN TRANSACTION;", nullptr, nullptr, &messageError);
@@ -127,15 +127,16 @@ int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float> >
         return -1;
     }
 
-    for (int i = 0; i < fingerPrints.size(); i++) {
-        const auto &[hash, a_time] = fingerPrints[i];
-        sqlite3_reset(stmt);
-        sqlite3_bind_int(stmt, 1, static_cast<int>(hash));
-        sqlite3_bind_int(stmt, 2, song_id);
-        sqlite3_bind_double(stmt, 3, a_time);
+    for (const auto &[hash, times]: fingerprints) {
+        for (const auto &time: times) {
+            sqlite3_reset(stmt);
+            sqlite3_bind_int(stmt, 1, hash);
+            sqlite3_bind_int(stmt, 2, song_id);
+            sqlite3_bind_double(stmt, 3, time);
 
-        if (sqlite3_step(stmt) != SQLITE_DONE) {
-            std::cerr << "insert failed: " << sqlite3_errmsg(_db) << std::endl;
+            if (sqlite3_step(stmt) != SQLITE_DONE) {
+                std::cerr << "insert failed: " << sqlite3_errmsg(_db) << std::endl;
+            }
         }
     }
 
@@ -146,20 +147,20 @@ int sqlite3_db::db_process_fingerPrints(std::vector<std::pair<uint32_t, float> >
     return 0;
 }
 
-int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float> > &fingerPrints) {
-    // std::cout << "\nmatching following fingerprints: \n" << std::endl;
-    // std::cout << "\nvery first fingerprint: \n" << fingerPrints[0].first << " Total amount: " << fingerPrints.size() <<
-    //         std::endl;
-
+std::unordered_map<int, std::vector<std::pair<int, double> > > sqlite3_db::db_match_fingerPrints(
+    std::unordered_map<int, std::vector<double> > &fingerPrints) {
+    // preparing the sql statement with question marks
     std::string paramList;
 
-    std::cout << "FINGERPRINTS:" << fingerPrints.size() << std::endl;
+    int done = 0;
+    int size = fingerPrints.size() - 1;
 
-    for (int i = 0; i < fingerPrints.size(); i++) {
+    for (const auto &[hash, times]: fingerPrints) {
         paramList.append("?");
-        if (i != fingerPrints.size() - 1) {
+        if (done < size) {
             paramList.append(", ");
         }
+        done++;
     }
 
 
@@ -168,11 +169,13 @@ int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float> > &
 
     if (sqlite3_prepare_v2(_db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(_db) << "\n";
-        return 1;
+        return {};
     }
 
-    for (int i = 0; i < fingerPrints.size(); i++) {
-        sqlite3_bind_int(stmt, i + 1, static_cast<int>(fingerPrints[i].first));
+    int i = 0;
+    for (const auto &[hash, times]: fingerPrints) {
+        sqlite3_bind_int(stmt, i + 1, hash);
+        i++;
     }
 
     // hash map -> [song] = <vector>{hash, anchor_time}
@@ -200,7 +203,7 @@ int sqlite3_db::db_match_fingerPrints(std::vector<std::pair<uint32_t, float> > &
     sqlite3_finalize(stmt);
 
 
-    return 0;
+    return song_fingerprints;
 }
 
 

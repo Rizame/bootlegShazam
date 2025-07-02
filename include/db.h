@@ -23,9 +23,10 @@ public:
 
     int drop_db(int drop_code);
 
-    int db_process_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints, int &song_id);
+    int db_process_fingerPrints(std::unordered_map<int, std::vector<double> > &fingerprints, int &song_id);
 
-    int db_match_fingerPrints(std::vector<std::pair<uint32_t, float>> &fingerPrints);
+    std::unordered_map<int, std::vector<std::pair<int, double> > > db_match_fingerPrints(
+        std::unordered_map<int, std::vector<double> > &fingerPrints);
 
     ~sqlite3_db();
 

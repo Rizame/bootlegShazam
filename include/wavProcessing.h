@@ -43,9 +43,10 @@ namespace wav {
 
     void processPeaks(std::vector<Peak> &peaks, bool toStore);
 
-    std::vector<std::pair<uint32_t, float>> createFingerprints(std::vector<wav::Peak> &peaks);
+    std::unordered_map<int, std::vector<double> > createFingerprints(std::vector<wav::Peak> &peaks);
 
-    int scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double>>> &matches, std::vector<std::pair<uint32_t, float>> &clips);
+    std::pair<int, int> scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double> > > &matches,
+                                     std::unordered_map<int, std::vector<double> > &clips);
 
     struct Peak {
         float time;
