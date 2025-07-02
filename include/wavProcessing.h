@@ -45,14 +45,20 @@ namespace wav {
 
     std::unordered_map<int, std::vector<double> > createFingerprints(std::vector<wav::Peak> &peaks);
 
-    std::pair<int, int> scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double> > > &matches,
-                                     std::unordered_map<int, std::vector<double> > &clips);
+    struct Score {
+        float offset = 0.f;
+        int score = 0;
+        int songId = -1;
+    };
 
     struct Peak {
         float time;
         int bin;
         float mag;
     };
+
+    Score scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double> > > &matches,
+                       std::unordered_map<int, std::vector<double> > &clips);
 }
 
 

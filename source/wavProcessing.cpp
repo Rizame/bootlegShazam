@@ -110,7 +110,6 @@ std::vector<wav::Peak> wav::filterPeaks(const std::vector<std::vector<float> > &
     std::vector<Peak> peaks;
     double hopTime = hop_size / (sample_rate * sample_coeff);
     int ranges[6] = {10, 20, 40, 80, 160, 512};
-    // TODO check if we need to know which peak belongs to specific window
 
     for (int i = 0; i < spectrogram.size(); i++) {
         Peak curRangePeak = {0.0f, 0, 0.0f};
@@ -151,26 +150,6 @@ void wav::applyHammingWindow(std::vector<float> &window) {
     }
 }
 
-/* Every item in spectrogram was created from windows that were sliced
- with a rate of 44 100Hz, we got 1024 samples from every window
- hence to find the timestamp for a corresponding spectrum we use the
- sample, sample rate and hop size */
-std::vector<std::vector<float> > wav::applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate,
-                                                     float hopSize) {
-    std::vector timeMatrix(spectrogram);
-
-    double hopTime = hopSize / samplingRate;
-    for (int i = 0; i < spectrogram.size(); i++) {
-        std::vector<time_t> window(spectrogram[i].size());
-        auto windowTime = i * hopTime;
-        for (int j = 0; j < spectrogram[i].size(); j++) {
-            double delta_time = j / samplingRate;
-            timeMatrix[i][j] = windowTime + delta_time;
-        }
-    }
-    return timeMatrix;
-}
-
 std::unordered_map<int, std::vector<double> > wav::createFingerprints(std::vector<wav::Peak> &peaks) {
     int TARGET_ZONE_SIZE = 4;
     std::unordered_map<int, std::vector<double> > fingerprints;
@@ -195,13 +174,13 @@ std::unordered_map<int, std::vector<double> > wav::createFingerprints(std::vecto
 
 @return song_id of the matches song
  */
-std::pair<int, int> wav::scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double> > > &matches,
-                                      std::unordered_map<int, std::vector<double> > &clips) {
-    std::pair<int, int> topScore; // bin of the offset and song id
-    std::unordered_map<int, int> histogram;
-
+wav::Score wav::scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double> > > &matches,
+                             std::unordered_map<int, std::vector<double> > &clips) {
+    Score topScore; // bin of the offset and song id
 
     for (const auto &[song_id, hashes]: matches) {
+        std::unordered_map<int, int> histogram;
+        Score localScore;
         for (int i = 0; i < hashes.size(); i++) {
             auto match_hash_time = hashes[i];
             auto clip_anchor_times = clips[match_hash_time.first];
@@ -210,12 +189,25 @@ std::pair<int, int> wav::scoreMatches(std::unordered_map<int, std::vector<std::p
                 auto offset = clip_anchor_times[j] - match_hash_time.second;
                 int bin = std::round(offset / 0.05);
                 histogram[bin]++;
-                if (histogram[bin] > histogram[topScore.first]) {
-                    topScore.first = bin;
-                    topScore.second = song_id;
+                if (histogram[bin] > localScore.score) {
+                    localScore.songId = song_id;
+                    localScore.offset = bin * 50 / (2.0 * 1000);
+                    localScore.score = histogram[bin];
+                }
+
+                if (histogram[bin] > topScore.score) {
+                    topScore.offset = bin * 50 / (2.0 * 1000);
+                    topScore.songId = song_id;
+                    topScore.score = histogram[bin];
                 }
             }
         }
+        std::cout << "\n\nLocal winner: " << localScore.songId
+                << " with an offset: " << localScore.offset
+                << " score:  " << localScore.score << std::endl;
+        std::cout << "Top winner: " << topScore.songId
+                << " with an offset: " << topScore.offset
+                << " score:  " << topScore.score << std::endl;
     }
 
     return topScore;
@@ -224,19 +216,18 @@ std::pair<int, int> wav::scoreMatches(std::unordered_map<int, std::vector<std::p
 /*Function that calls hashing on every anchor point and  */
 void wav::processPeaks(std::vector<Peak> &peaks, bool toStore, std::string songName) {
     sqlite3_db db("store.db");
+
     auto fingerPrints = createFingerprints(peaks);
 
     if (toStore) {
-        // db.drop_db(2);
-        // db.db_create();
         auto song_id = db.db_insert_song(songName);
-
         db.db_process_fingerPrints(fingerPrints, song_id);
     } else {
         std::unordered_map<int, std::vector<std::pair<int, double> > > matches = db.db_match_fingerPrints(fingerPrints);
         auto result = scoreMatches(matches, fingerPrints);
 
-        std::cout << "Offset: " << result.first * 50 / (2 * 1000.0) << "s" <<
-                ", Song Id: " << result.second << std::endl;
+        std::cout << "Offset: " << result.offset << "s" <<
+                ", Song Id: " << result.songId <<
+                ", Score: " << result.score << std::endl;
     }
 }

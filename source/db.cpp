@@ -149,7 +149,6 @@ int sqlite3_db::db_process_fingerPrints(std::unordered_map<int, std::vector<doub
 
 std::unordered_map<int, std::vector<std::pair<int, double> > > sqlite3_db::db_match_fingerPrints(
     std::unordered_map<int, std::vector<double> > &fingerPrints) {
-    // preparing the sql statement with question marks
     std::string paramList;
 
     int done = 0;
@@ -191,18 +190,10 @@ std::unordered_map<int, std::vector<std::pair<int, double> > > sqlite3_db::db_ma
 
 
     for (const auto &[song_id, vec]: song_fingerprints) {
-        for (const auto &[hash, anchor_time]: vec) {
-            std::cout << "SongID: " << song_id
-                    << "  hash: " << hash
-                    << "  db_match_anchor_t: " << anchor_time
-                    << std::endl;
-        }
+        std::cout << "Potential songs: " << song_id << " with matches: " << vec.size() << std::endl;
     }
 
-
     sqlite3_finalize(stmt);
-
-
     return song_fingerprints;
 }
 
