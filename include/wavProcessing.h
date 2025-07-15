@@ -15,11 +15,13 @@
 
 class sqlite3_db; // forward declaration
 
-
+//TODO UBRAT` NAXUY SAMPLE_RATE UBIT` I SEYVIT` VNUTRI WAV
 #define sample_rate 44100
 #define sample_coeff 0.25f
 #define window_size 1024
 #define hop_size 512
+#define cutoff_frequency 5000
+
 
 namespace wav {
     struct Peak;
@@ -36,14 +38,13 @@ namespace wav {
 
     void plotWindow(std::vector<float> &window);
 
-    void plotSpectrogram(std::vector<std::vector<float> > &spectrogram);
-
-    std::vector<std::vector<float> > applyTimestamp(std::vector<std::vector<float> > &spectrogram, float samplingRate,
-                                                    float hopSize);
-
     void processPeaks(std::vector<Peak> &peaks, bool toStore, std::string songName);
 
-    std::unordered_map<int, std::vector<double> > createFingerprints(std::vector<wav::Peak> &peaks);
+    std::unordered_map<uint32_t, std::vector<double> > createFingerprints(std::vector<wav::Peak> &peaks);
+
+    float lowPassFilter(float &prev, float current);
+
+    float const m_coeff = std::exp(-(1 / sample_rate) / (1 / M_PI * cutoff_frequency));
 
     struct Score {
         float offset = 0.f;
@@ -57,8 +58,8 @@ namespace wav {
         float mag;
     };
 
-    Score scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double> > > &matches,
-                       std::unordered_map<int, std::vector<double> > &clips);
+    Score scoreMatches(std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > &matches,
+                       std::unordered_map<uint32_t, std::vector<double> > &clips);
 }
 
 

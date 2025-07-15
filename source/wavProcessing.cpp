@@ -2,10 +2,17 @@
 
 #include "../include/wavProcessing.h"
 #include "../include/db.h"
+#include <fstream>
+
+float wav::lowPassFilter(float &prev, float current) {
+    prev = m_coeff * prev + (1.f - m_coeff) * current;
+    return prev;
+}
 
 
 std::vector<float> wav::processFile(const char *fileName) {
     drwav wav;
+
     if (!drwav_init_file(&wav, fileName, NULL)) {
         throw std::logic_error("Failed to open WAV file.\n");
     }
@@ -16,26 +23,44 @@ std::vector<float> wav::processFile(const char *fileName) {
     uint64_t totalSamples = wav.totalPCMFrameCount * wav.channels;
     std::vector<float> samples(totalSamples);
 
-    uint64_t samplesRead = drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
+    uint64_t framesRead = drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
     drwav_uninit(&wav);
 
-    if (samplesRead != wav.totalPCMFrameCount) {
+    if (framesRead != wav.totalPCMFrameCount) {
         std::cerr << "Warning: Not all frames read.\n";
     }
 
     std::cout << "Total number of samples before:: " << samples.size() << std::endl;
 
     std::vector<float> reducedSamples;
-    reducedSamples.reserve((samples.size() * sample_coeff));
 
-    for (size_t i = 0; i < samples.size(); ++i) {
-        if (i % 4 == 0) {
-            reducedSamples.push_back(samples[i]);
+    reducedSamples.reserve((samples.size() * sample_coeff));
+    float mean4 = 0.f;
+    int j = 0;
+    float prev = 0.f;
+
+    for (size_t i = 0; i < framesRead; ++i) {
+        if (wav.channels == 1) {
+            mean4 += samples[i];
+            // mean4 += lowPassFilter(prev, samples[i]);
+        } else if (wav.channels == 2) {
+            auto left = 0.5f * samples[i * 2 + 0];
+            auto right = 0.5f * samples[i * 2 + 1];
+            mean4 += left + right;
+
+            // mean4 += lowPassFilter(prev, left + right);
+        }
+
+        ++j;
+        if (j == 4) {
+            mean4 /= 4.f;
+            reducedSamples.push_back(mean4);
+            j = 0;
+            mean4 = 0.f;
         }
     }
 
     std::cout << "Total number of samples after:" << reducedSamples.size() << std::endl;
-
     return reducedSamples;
 }
 
@@ -68,28 +93,6 @@ std::vector<std::vector<float> > wav::createWindows(const std::vector<float> &pc
 
 void wav::plotWindow(std::vector<float> &window) {
     matplotlibcpp::plot(window);
-    matplotlibcpp::show();
-}
-
-void wav::plotSpectrogram(std::vector<std::vector<float> > &spec) {
-    const int cols = static_cast<int>(spec.size());
-    const int rows = static_cast<int>(spec[0].size());
-
-    /* 1 · flatten into a single contiguous std::vector<float>  */
-    std::vector<float> img(rows * cols);
-    for (int r = 0; r < rows; ++r)
-        std::copy(spec[r].begin(), spec[r].end(), img.begin() + r * cols);
-
-    matplotlibcpp::imshow(img.data(), rows, cols, /*colors=*/1,
-                          {
-                              {"origin", "lower"},
-                              {"interpolation", "nearest"},
-                              {"aspect", "auto"},
-                              {"cmap", "magma"}
-                          });
-
-    matplotlibcpp::xlabel("Frequency"); // use timeMatrix to build real-world ticks
-    matplotlibcpp::ylabel("Amplitude"); // if you like — omitted here
     matplotlibcpp::show();
 }
 
@@ -150,9 +153,9 @@ void wav::applyHammingWindow(std::vector<float> &window) {
     }
 }
 
-std::unordered_map<int, std::vector<double> > wav::createFingerprints(std::vector<wav::Peak> &peaks) {
+std::unordered_map<uint32_t, std::vector<double> > wav::createFingerprints(std::vector<wav::Peak> &peaks) {
     int TARGET_ZONE_SIZE = 4;
-    std::unordered_map<int, std::vector<double> > fingerprints;
+    std::unordered_map<uint32_t, std::vector<double> > fingerprints;
     // TODO check proyob with int and double
 
     wav::Peak anchor{0, 0, 0};
@@ -174,8 +177,8 @@ std::unordered_map<int, std::vector<double> > wav::createFingerprints(std::vecto
 
 @return song_id of the matches song
  */
-wav::Score wav::scoreMatches(std::unordered_map<int, std::vector<std::pair<int, double> > > &matches,
-                             std::unordered_map<int, std::vector<double> > &clips) {
+wav::Score wav::scoreMatches(std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > &matches,
+                             std::unordered_map<uint32_t, std::vector<double> > &clips) {
     Score topScore; // bin of the offset and song id
 
     for (const auto &[song_id, hashes]: matches) {
@@ -223,7 +226,8 @@ void wav::processPeaks(std::vector<Peak> &peaks, bool toStore, std::string songN
         auto song_id = db.db_insert_song(songName);
         db.db_process_fingerPrints(fingerPrints, song_id);
     } else {
-        std::unordered_map<int, std::vector<std::pair<int, double> > > matches = db.db_match_fingerPrints(fingerPrints);
+        std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > matches = db.db_match_fingerPrints(
+            fingerPrints);
         auto result = scoreMatches(matches, fingerPrints);
 
         std::cout << "Offset: " << result.offset << "s" <<

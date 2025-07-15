@@ -31,6 +31,20 @@ void insert_all_songs() {
     }
 }
 
+
+void insert_one_song(std::string song_name) {
+    sqlite3_db db("store.db");
+
+    std::string filename = "songs/original/" + song_name + ".wav";
+    std::vector samplesInput = wav::processFile(filename.c_str());
+    std::vector<std::vector<float> > spectrogramInput = wav::createSpectrogram(samplesInput);
+
+
+    auto peaksInput = wav::filterPeaks(spectrogramInput);
+    wav::processPeaks(peaksInput, true, song_name);
+    std::cout << std::endl;
+}
+
 void process_trimmed_song(const std::string &song) {
     std::string filename = "songs/clips/" + song + ".wav";
 
@@ -44,9 +58,9 @@ void process_trimmed_song(const std::string &song) {
 
 
 int main() {
-    // insert_all_songs();
+    //insert_all_songs();
 
-    process_trimmed_song("soldOutRec");
+    process_trimmed_song("ohWhouRec");
 
     return 0;
 }

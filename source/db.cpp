@@ -107,7 +107,7 @@ int sqlite3_db::db_insert_hash(const uint32_t hash, int song_id, float anchor_ti
     return 0;
 }
 
-int sqlite3_db::db_process_fingerPrints(std::unordered_map<int, std::vector<double> > &fingerprints, int &song_id) {
+int sqlite3_db::db_process_fingerPrints(std::unordered_map<uint32_t, std::vector<double> > &fingerprints, int &song_id) {
     char *messageError;
 
     auto rc = sqlite3_exec(_db, "BEGIN TRANSACTION;", nullptr, nullptr, &messageError);
@@ -147,8 +147,8 @@ int sqlite3_db::db_process_fingerPrints(std::unordered_map<int, std::vector<doub
     return 0;
 }
 
-std::unordered_map<int, std::vector<std::pair<int, double> > > sqlite3_db::db_match_fingerPrints(
-    std::unordered_map<int, std::vector<double> > &fingerPrints) {
+std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > sqlite3_db::db_match_fingerPrints(
+    std::unordered_map<uint32_t, std::vector<double> > &fingerPrints) {
     std::string paramList;
 
     int done = 0;
@@ -178,11 +178,11 @@ std::unordered_map<int, std::vector<std::pair<int, double> > > sqlite3_db::db_ma
     }
 
     // hash map -> [song] = <vector>{hash, anchor_time}
-    std::unordered_map<int, std::vector<std::pair<int, double> > > song_fingerprints;
+    std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > song_fingerprints;
 
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
-        int hash = sqlite3_column_int(stmt, 0);
+        auto hash = static_cast<uint32_t>(sqlite3_column_int(stmt, 0));
         int song_id = sqlite3_column_int(stmt, 1);
         double anchor_time = sqlite3_column_double(stmt, 2);
         song_fingerprints[song_id].emplace_back(hash, anchor_time);
