@@ -8,13 +8,12 @@
 #include <iostream>
 
 uint32_t encoding::encode(int anchor_bin, int target_bin, float delta_time) {
-    auto masked_time = static_cast<uint32_t>(std::lround(delta_time / 0.001f));
+    uint32_t anchor = static_cast<uint32_t>(anchor_bin) & ANCHOR_MASK;
+    uint32_t target = static_cast<uint32_t>(target_bin) & TARGET_MASK;
+    uint32_t delta = static_cast<uint32_t>(std::lround(delta_time / 0.001f));
+    delta = delta & DELTA_MASK;
 
-    if (masked_time > DELTA_MASK) masked_time = DELTA_MASK;
-
-    uint32_t fingerprint = (static_cast<uint32_t>(anchor_bin) & ANCHOR_MASK) << 23 |
-                           (static_cast<uint32_t>(target_bin) & TARGET_MASK) << 14 |
-                           masked_time & DELTA_MASK;
+    uint32_t fingerprint = anchor << 23 | target << 14 | delta;
 
     return fingerprint;
 }

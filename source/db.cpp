@@ -178,19 +178,13 @@ std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > sqlite3_db::
     }
 
     // hash map -> [song] = <vector>{hash, anchor_time}
-    std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > song_fingerprints;
-
+    std::unordered_map<uint32_t, std::vector<std::pair<int, double>>> song_fingerprints;
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         auto hash = static_cast<uint32_t>(sqlite3_column_int(stmt, 0));
         int song_id = sqlite3_column_int(stmt, 1);
         double anchor_time = sqlite3_column_double(stmt, 2);
-        song_fingerprints[song_id].emplace_back(hash, anchor_time);
-    }
-
-
-    for (const auto &[song_id, vec]: song_fingerprints) {
-        std::cout << "Potential songs: " << song_id << " with matches: " << vec.size() << std::endl;
+        song_fingerprints[hash].emplace_back(song_id, anchor_time);  // Grouped by hash!
     }
 
     sqlite3_finalize(stmt);

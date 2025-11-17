@@ -14,13 +14,16 @@ void insert_all_songs() {
         "Casino",
         "fakeId",
         "ohWhou",
-        "soldOut"
+        "soldOut",
+        "cheba"
     };
 
     for (int i = 0; i < songs.size(); i++) {
         std::string song = songs[i];
 
         std::string filename = "songs/original/" + song + ".wav";
+        std::cout<<filename<<"\n";
+        std::flush(std::cout);
         std::vector samplesInput = wav::processFile(filename.c_str());
         std::vector<std::vector<float> > spectrogramInput = wav::createSpectrogram(samplesInput);
 
@@ -31,14 +34,12 @@ void insert_all_songs() {
     }
 }
 
-
 void insert_one_song(std::string song_name) {
     sqlite3_db db("store.db");
 
     std::string filename = "songs/original/" + song_name + ".wav";
     std::vector samplesInput = wav::processFile(filename.c_str());
     std::vector<std::vector<float> > spectrogramInput = wav::createSpectrogram(samplesInput);
-
 
     auto peaksInput = wav::filterPeaks(spectrogramInput);
     wav::processPeaks(peaksInput, true, song_name);
@@ -48,7 +49,12 @@ void insert_one_song(std::string song_name) {
 void process_trimmed_song(const std::string &song) {
     std::string filename = "songs/clips/" + song + ".wav";
 
-    std::vector samplesInput = wav::processFile(filename.c_str());
+    std::vector<float> samplesInput = wav::processFile(filename.c_str());
+    //TODO check downsampling from 48000 to 44100 -------> maybe FFMPEG?
+
+    wav::recreateSound(samplesInput);
+
+
     std::vector<std::vector<float> > spectrogramInput = wav::createSpectrogram(samplesInput);
 
 
@@ -59,8 +65,8 @@ void process_trimmed_song(const std::string &song) {
 
 int main() {
     //insert_all_songs();
-
-    process_trimmed_song("ohWhouRec");
+    //insert_one_song("psychoPac");
+    process_trimmed_song("psychoClip");
 
     return 0;
 }
