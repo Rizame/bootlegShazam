@@ -21,11 +21,16 @@ add_executable(Shazam main.cpp
         source/db.cpp
         include/encoding.h
         source/encoding.cpp
+        httpServer/cppServer.cpp
+        httpServer/cppServer.h
+        source/recogniser.cpp
+        lib/recogniser.h
 )
 
 # Tell the compiler where to look for headers
 target_include_directories(Shazam PRIVATE
-        ${CMAKE_SOURCE_DIR}/lib                     #  ➜ matplotlibcpp.h lives here
+        ${CMAKE_SOURCE_DIR}/lib/matplotlibcpp                   #  ➜ matplotlibcpp.h lives here
+        ${CMAKE_SOURCE_DIR}/lib/cpp-httplib
         ${Python3_INCLUDE_DIRS}                     #  ➜ Python.h
         ${Python3_NumPy_INCLUDE_DIRS}               #  ➜ NumPy C-API
 )
@@ -37,8 +42,5 @@ target_link_libraries(Shazam PRIVATE
         PkgConfig::FFTW
         Python3::Python
         sqlite3
+        pthread #for httplib
 )
-
-# (optional) show what CMake picked up
-message(STATUS "Python include dir: ${Python3_INCLUDE_DIRS}")
-message(STATUS "Python   library : ${Python3_LIBRARIES}")

@@ -158,7 +158,7 @@ std::vector<float> wav::processFile(const char *fileName) {
         }
     }
 
-    if(wav.sampleRate != 44100){
+    if(wav.sampleRate != sample_rate){
         monoSamples = resampleTo44100(monoSamples, wav.sampleRate);
     }
     // FIR lowpass filter

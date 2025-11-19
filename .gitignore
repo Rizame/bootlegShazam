@@ -1,0 +1,5 @@
+py/*
+.idea/*
+.vscode/*
+frontend/bootlegWeb/node_modules/*
+store.db

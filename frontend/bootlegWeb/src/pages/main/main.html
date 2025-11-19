@@ -1,0 +1,41 @@
+<div class="upload-container">
+  <div
+    class="circle"
+    (mouseenter)="onCircleHover()"
+    (mouseleave)="onCircleLeave()"
+    [class.hover]="isCircleHovered"
+  >
+    <div class="circle-content">
+      <h3>Record</h3>
+    </div>
+  </div>
+
+  <div
+    class="upload-card"
+    (click)="fileInput.click()"
+    (mouseenter)="onCardHover()"
+    (mouseleave)="onCardLeave()"
+    [class.hover]="isCardHovered"
+  >
+    <div class="card-content">
+      <i class="upload-icon">📁</i>
+      <h4>Select Audio File</h4>
+      <p>Click to choose WAV or MP3 file</p>
+      <span class="file-info" *ngIf="selectedFile">
+        Selected: {{ selectedFile?.name }}
+      </span>
+    </div>
+
+    <input
+      #fileInput
+      type="file"
+      (change)="onFileSelected($event)"
+      accept=".wav,.mp3,.audio/*"
+      style="display: none"
+    />
+  </div>
+
+  <button class="upload-btn" (click)="uploadFile()" [disabled]="!selectedFile">
+    Identify Song
+  </button>
+</div>
