@@ -25,3 +25,18 @@ In more detail here is how the algorithm is implemented from song up loading to 
 ### Nifty things
 In the code it is possible to allow spectrogram creation to see how sound looks plotted in a frequency domain.
 Also in the main root of the project after running a song recognition algorithm a sound file will appear - a reconstruction of the inputted audio after the lowpass filter and downsampling were applied!
+
+### Working example
+When running the recognition function you will see such logs in the console:
+![img.png](images/audioProcessing.png)
+
+The audio gets filtered, turned to mono, downsampled,
+and turned into a spectrogram and a bunch of fingerprints.
+
+![img.png](images/songsFiltering.png)
+Then you will see a print out of the matching function. That filters out songs where a lot of complete
+TGZ's are missing. And then it will count the most appearing offset in comparison to db matches.
+
+![img.png](images/result.png)
+
+Lastly it prints out the decision.

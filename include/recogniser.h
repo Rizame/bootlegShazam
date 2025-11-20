@@ -5,11 +5,9 @@
 #ifndef SHAZAM_RECOGNISER_H
 #define SHAZAM_RECOGNISER_H
 
-#endif //SHAZAM_RECOGNISER_H
-
 #include <iostream>
-#include "../include/wavProcessing.h"
-#include "../include/db.h"
+#include "wavProcessing.h"
+#include "db.h"
 
 class Recogniser {
 private:
@@ -24,5 +22,4 @@ public:
     void recognize_audio(const std::string &song_name);
 };
 
-
-#endif //SHAZAM_CPPSERVER_H
+#endif //SHAZAM_RECOGNISER_H

@@ -1,13 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { MainService } from './service/main-service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   standalone: true,
   selector: 'app-main',
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './main.html',
   styleUrl: './main.css',
 })
 export class Main {
+  private mainService = inject(MainService);
+
   isCircleHovered = false;
   isCardHovered = false;
   selectedFile: File | null = null;
@@ -40,6 +44,7 @@ export class Main {
     if (this.selectedFile) {
       // Call your audio service here
       console.log('Uploading file:', this.selectedFile.name);
+      this.mainService.recogniseSong(this.selectedFile);
       this.selectedFile = null;
     }
   }

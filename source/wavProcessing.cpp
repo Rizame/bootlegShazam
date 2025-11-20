@@ -466,11 +466,10 @@ wav::Score wav::scoreMatches(
 
     const int MIN_TGZ = 5;
     const float COHERENT_COEF = 0.05f; // 5% threshold
-    const int MIN_ABSOLUTE_MATCHES = 10;
 
 
     // Step 1: Get TGZ Quantities - Count fingerprint occurrences
-    std::cout << "\nStep 1: Calculating TGZ quantities..." << std::endl;
+    std::cout << "\nCalculating TGZ quantities..." << std::endl;
     std::map<std::pair<int, double>, int> song_value_quantities;
 
     for (auto& [hash, query_times] : query_fingerprints) {
@@ -485,7 +484,7 @@ wav::Score wav::scoreMatches(
     std::cout << "Found " << song_value_quantities.size() << " distinct song values in query" << std::endl;
 
     // Step 2: Filter Songs - Keep only songs with strong TGZ
-    std::cout << "\nStep 2: Filtering songs by TGZ strength..." << std::endl;
+    std::cout << "\nFiltering songs by TGZ strength..." << std::endl;
     std::unordered_map<int, std::vector<FingerprintValue>> filtered_songs;
     std::unordered_map<int, int> song_couple_counts;
     std::unordered_map<int, int> song_tgz_counts;
@@ -517,10 +516,8 @@ wav::Score wav::scoreMatches(
         }
     }
 
-    std::cout << "Filtered down to " << filtered_songs.size() << " candidate songs" << std::endl;
-
     // Step 3: Remove low-quality songs
-    std::cout << "\nStep 3: Removing low-quality songs..." << std::endl;
+    std::cout << "\nRemoving low-quality songs..." << std::endl;
     std::vector<int> songs_to_remove;
 
     for (auto& [song_id, fingerprints] : filtered_songs) {
@@ -601,10 +598,9 @@ wav::Score wav::scoreMatches(
                   << "coherency(max coherency in one go): " << (coherency_ratio * 100) << "%, "
                   << percentage_of_query << "% matching to all notes)" << std::endl;
 
-        bool passes_absolute = max_coherent_notes >= MIN_ABSOLUTE_MATCHES;
         bool passes_percentage = max_coherent_notes >= COHERENT_COEF * total_query_notes;
 
-        if (passes_absolute && passes_percentage) {
+        if (passes_percentage) {
             std::cout << "  ACCEPTED" << std::endl;
 
             if (max_coherent_notes > topScore.score) {
@@ -614,7 +610,6 @@ wav::Score wav::scoreMatches(
             }
         } else {
             std::cout << "   REJECTED: ";
-            if (!passes_absolute) std::cout << "low_absolute ";
             if (!passes_percentage) std::cout << "low_percentage ";
             std::cout << std::endl;
         }

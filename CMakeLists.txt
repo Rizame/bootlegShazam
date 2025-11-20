@@ -24,7 +24,7 @@ add_executable(Shazam main.cpp
         httpServer/cppServer.cpp
         httpServer/cppServer.h
         source/recogniser.cpp
-        lib/recogniser.h
+        include/recogniser.h
 )
 
 # Tell the compiler where to look for headers

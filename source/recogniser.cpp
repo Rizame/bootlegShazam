@@ -1,7 +1,7 @@
 //
 // Created by risame on 11/19/25.
 //
-#include "recogniser.h"
+#include "../include/recogniser.h"
 
 void Recogniser::insert_all_songs() {
     db.drop_db(2);
