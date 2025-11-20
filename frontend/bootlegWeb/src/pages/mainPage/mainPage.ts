@@ -6,10 +6,10 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   selector: 'app-main',
   imports: [CommonModule],
-  templateUrl: './main.html',
-  styleUrl: './main.css',
+  templateUrl: './mainPage.html',
+  styleUrl: './mainPage.css',
 })
-export class Main {
+export class MainPage {
   private mainService = inject(MainService);
 
   isCircleHovered = false;
@@ -42,7 +42,6 @@ export class Main {
 
   uploadFile() {
     if (this.selectedFile) {
-      // Call your audio service here
       console.log('Uploading file:', this.selectedFile.name);
       this.mainService.recogniseSong(this.selectedFile);
       this.selectedFile = null;
