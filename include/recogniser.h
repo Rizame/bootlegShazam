@@ -14,12 +14,13 @@ private:
     sqlite3_db db;
 
 public:
+
     Recogniser() : db("store.db") {
     }
 
     void insert_all_songs();
     void insert_one_song(const std::string &song_name);
-    void recognize_audio(const std::string &song_name);
+    wav::Score recognize_audio(const std::string &song_name);
 };
 
 #endif //SHAZAM_RECOGNISER_H

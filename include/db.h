@@ -14,6 +14,7 @@
 class sqlite3_db {
 public:
     explicit sqlite3_db(const std::string &db_name);
+    std::string db_get_songName(int song_id) const;
 
     int db_insert_hash(uint32_t hash, int song_id, float anchor_time) const;
 

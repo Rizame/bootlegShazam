@@ -34,7 +34,7 @@ void Recogniser::insert_all_songs() {
 }
 
 void Recogniser::insert_one_song(const std::string &song_name) {
-    std::string filename = "songs/original/" + song_name + ".wav";
+    std::string filename = "frontTempAudio/" + song_name + ".wav";
     std::vector samplesInput = wav::processFile(filename.c_str());
     std::vector<std::vector<float> > spectrogramInput = wav::createSpectrogram(samplesInput);
 
@@ -42,8 +42,8 @@ void Recogniser::insert_one_song(const std::string &song_name) {
     wav::processPeaks(peaksInput, true, song_name);
     std::cout << std::endl;
 }
-void Recogniser::recognize_audio(const std::string &song_name) {
-    std::string filename = "songs/clips/" + song_name + ".wav";
+wav::Score Recogniser::recognize_audio(const std::string &song_name) {
+    std::string filename = "frontTempAudio/" + song_name;
 
     std::vector<float> samplesInput = wav::processFile(filename.c_str());
     //TODO check downsampling from 48000 to 44100 -------> maybe FFMPEG?
@@ -53,5 +53,6 @@ void Recogniser::recognize_audio(const std::string &song_name) {
 
 
     auto peaksInput = wav::filterPeaks(spectrogramInput);
-    wav::processPeaks(peaksInput, false, song_name);
+    wav::Score result = wav::processPeaks(peaksInput, false, song_name);
+    return result;
 }

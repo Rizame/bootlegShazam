@@ -3,6 +3,8 @@
 //
 
 #include "cppServer.h"
+#include <fstream>
+#include<filesystem>
 
 void cppServer::setupRoutes() {
     svr.Post("/api/recognise", [this](const auto& req, auto& res) {
@@ -39,8 +41,58 @@ void cppServer::recognizeSong(const httplib::Request &req, httplib::Response &re
         res.set_content("No audio file R", "text/plain");
         return;
     }
-    //this->recogniser.recognize_audio("test");
     std::cout<<"Recognising song"<<std::endl;
+    const auto& audioFile = req.form.get_file("audio");
+    std::cout << "Uploaded file: " << audioFile.filename
+              << " (" << audioFile.content_type << ") - "
+              << audioFile.content.size() << " bytes" << std::endl;
 
+    std::string path = "frontTempAudio/";
+    std::string fileName = audioFile.filename;
+    std::filesystem::create_directories(path);
+
+    std::ofstream ofs(path+fileName, std::ios::binary);
+    ofs << audioFile.content;
+
+    if (!ofs) {
+        std::cout<<"Failed to open file"<<std::endl;
+        res.status = 500;
+        res.set_content("Failed to write file", "text/plain");
+        return;
+    }
+    ofs.close();
+
+    wav::Score result = this->recogniser.recognize_audio(fileName);
+
+    std::cout<<"Recognized audio: "<<result.songName<<std::endl;
+    std::string json_response;
+    if (result.songId != -1) {
+        json_response =
+            "{\"status\":\"success\","
+            "\"songId\":" + std::to_string(result.songId) + ","
+            "\"songName\":\"" + result.songName + "\","
+            "\"confidence\":" + std::to_string(result.score) + ","
+            "\"offset\":" + std::to_string(result.offset) + ","
+            "\"percentageMatch\":" + std::to_string(result.percentageMatch) + ","
+            "\"message\":\"Song identified successfully\"}";
+    } else {
+        json_response =
+            "{\"status\":\"no_match\","
+            "\"songId\":-1,"
+            "\"songName\":\"\","
+            "\"confidence\":0,"
+            "\"offset\":0,"
+            "\"percentageMatch\":0,"
+            "\"message\":\"No matching song found\"}";
+    }
+
+
+    if (remove((path+fileName).c_str()) == 0) {
+        std::cout << "File deleted successfully." << std::endl;
+    } else {
+        std::cerr << "Error deleting file '" << fileName << "'." << std::endl;
+    }
+
+    res.set_content(json_response, "application/json");
 }
 

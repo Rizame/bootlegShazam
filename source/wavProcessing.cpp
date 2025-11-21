@@ -607,6 +607,7 @@ wav::Score wav::scoreMatches(
                 topScore.songId = song_id;
                 topScore.offset = best_delta / 1000.0f;  // Convert to seconds
                 topScore.score = max_coherent_notes;
+                topScore.percentageMatch = percentage_of_query;
             }
         } else {
             std::cout << "   REJECTED: ";
@@ -629,7 +630,7 @@ wav::Score wav::scoreMatches(
 }
 
 /*Function that calls hashing on every anchor point and  */
-void wav::processPeaks(std::vector<Peak> &peaks, bool toStore, const std::string &songName) {
+wav::Score wav::processPeaks(std::vector<Peak> &peaks, bool toStore, const std::string &songName) {
     sqlite3_db db("store.db");
 
     auto fingerPrints = createFingerprints(peaks);
@@ -637,13 +638,18 @@ void wav::processPeaks(std::vector<Peak> &peaks, bool toStore, const std::string
     if (toStore) {
         int song_id = db.db_insert_song(songName);
         db.db_process_fingerPrints(fingerPrints, song_id);
-    } else {
-        std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > matches = db.db_match_fingerPrints(
-            fingerPrints);
-        auto result = scoreMatches(matches, fingerPrints);
-
-        std::cout << "Offset: " << result.offset << "s" <<
-                ", Song Id: " << result.songId <<
-                ", Score: " << result.score << std::endl;
+        return {};
     }
+    //else recognise
+    std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > matches = db.db_match_fingerPrints(
+        fingerPrints);
+    Score result = scoreMatches(matches, fingerPrints);
+    result.songName = db.db_get_songName(result.songId);
+
+    std::cout << "Offset: " << result.offset << "s" <<
+            ", Song Id: " << result.songId <<
+            ", Song Name: " << result.songName <<
+            ", Score: " << result.score << std::endl;
+
+    return result;
 }

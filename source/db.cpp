@@ -20,6 +20,34 @@ sqlite3_db::~sqlite3_db() {
     sqlite3_close(_db);
 }
 
+std::string sqlite3_db::db_get_songName(int song_id) const {
+    const char *sql = "SELECT SONG_NAME FROM SONGS WHERE SONG_ID = ?;";
+    sqlite3_stmt *stmt = nullptr;
+
+    if (sqlite3_prepare_v2(_db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "Could not prepare SELECT: " << sqlite3_errmsg(_db) << std::endl;
+        return "";
+    }
+
+    sqlite3_bind_int(stmt, 1, song_id);
+
+    auto rc = sqlite3_step(stmt);
+    if (rc != SQLITE_ROW) {
+        std::cerr << "The song with this ID does not exist: " << song_id << std::endl;
+        sqlite3_finalize(stmt);
+        return "";
+    }
+    const unsigned char *songName = sqlite3_column_text(stmt, 0);
+
+    std::string res;
+    if (songName != nullptr) {
+        res = reinterpret_cast<const char*>(songName);
+    }
+    sqlite3_finalize(stmt);
+
+    return res;
+}
+
 int sqlite3_db::find_song_id(const std::string &song_name) const {
     const char *sql = "SELECT * FROM SONGS WHERE SONG_NAME = ?;";
     sqlite3_stmt *stmt = nullptr;

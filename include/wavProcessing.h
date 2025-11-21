@@ -24,7 +24,19 @@ class sqlite3_db; // forward declaration
 
 
 namespace wav {
-    struct Peak;
+    struct Score {
+        float offset = 0.f;
+        float percentageMatch = 0.f;
+        int score = 0;
+        int songId = -1;
+        std::string songName;
+    };
+
+    struct Peak {
+        float time;
+        int bin;
+        float mag;
+    };
 
     std::vector<float> processFile(const char *fileName);
 
@@ -38,7 +50,7 @@ namespace wav {
 
     void plotWindow(std::vector<float> &window);
 
-    void processPeaks(std::vector<Peak> &peaks, bool toStore, const std::string &songName);
+    Score processPeaks(std::vector<Peak> &peaks, bool toStore, const std::string &songName);
 
     std::unordered_map<uint32_t, std::vector<double> > createFingerprints(std::vector<wav::Peak> &peaks);
 
@@ -51,18 +63,6 @@ namespace wav {
 
 
     float const m_coeff = std::exp(-(1 / sample_rate) / (1 / M_PI * cutoff_frequency));
-
-    struct Score {
-        float offset = 0.f;
-        int score = 0;
-        int songId = -1;
-    };
-
-    struct Peak {
-        float time;
-        int bin;
-        float mag;
-    };
 
     Score scoreMatches(std::unordered_map<uint32_t, std::vector<std::pair<int, double> > > &matches,
                        std::unordered_map<uint32_t, std::vector<double> > &clips);
